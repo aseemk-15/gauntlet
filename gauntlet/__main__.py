@@ -1,8 +1,12 @@
 """CLI: the gauntlet runs headless here first. The web view renders the same events."""
 import argparse
+import json
 import sys
 
+from .attack import fan_out
 from .chart import load_chart
+from .events import Run
+from .lanes import AGENTS_PER_LANE, DISCHARGE_LANES
 
 
 def main(argv=None):
@@ -26,8 +30,13 @@ def main(argv=None):
         print(chart.summary())
         if args.summary_only:
             return 0
-        print("\nattack phase: not built yet", file=sys.stderr)
-        return 2
+        run = Run("eleanor" + ("-amended" if args.amended else ""))
+        results = fan_out(run, chart.text, DISCHARGE_LANES, AGENTS_PER_LANE)
+        (run.dir / "attack.json").write_text(json.dumps(results, indent=2))
+        print(f"\nraw objections: {sum(1 for r in results if r.get('objection'))}"
+              f"/{len(results)}  ({run.meter()})")
+        print(f"artifacts: {run.dir}")
+        return 0
     return 0
 
 
