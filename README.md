@@ -32,9 +32,9 @@ discarded.
 ```bash
 python3 -m venv .venv && .venv/bin/pip install anthropic
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env   # never committed
-./gauntlet run assets/chart-eleanor-vance.md          # full 30-agent gauntlet
-./gauntlet run assets/chart-eleanor-vance.md --amended # attack the amended plan
-./gauntlet run --encounter covid-inpt                  # ambient mode (organizer dataset)
+./gauntlet-cli run assets/chart-eleanor-vance.md           # full 30-agent gauntlet
+./gauntlet-cli run assets/chart-eleanor-vance.md --amended # attack the amended plan
+./gauntlet-cli run --encounter covid-inpt                  # ambient mode (organizer dataset)
 ```
 
 ## How it works

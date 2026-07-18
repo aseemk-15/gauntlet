@@ -1,0 +1,3 @@
+#!/bin/sh
+# `./gauntlet-cli run <chart>` — wrapper so the demo line reads cleanly.
+exec "$(dirname "$0")/.venv/bin/python" -m gauntlet "$@"
