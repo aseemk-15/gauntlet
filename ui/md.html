@@ -127,9 +127,11 @@
 
 <script>
 const $ = id => document.getElementById(id);
-let runDir = new URLSearchParams(location.search).get('run');
+const pinnedRun = new URLSearchParams(location.search).get('run');
+let runDir = pinnedRun;
 let nLines = 0, meta = null, findings = [], decisions = {};
 let fixSubmitted = false, sawFixEvents = false, nChecks = 0, nKill = 0;
+let mdFix = {};  // event-sourced decision state — survives fetch races on replay
 const SEV = {1: ['s1', 'CRITICAL'], 2: ['s2', 'HIGH'], 3: ['s3', 'MODERATE']};
 
 function runTime() {
@@ -195,7 +197,10 @@ function card(f) {
       `<div class="rcpt"><span class="src">${q.section}</span> — “${q.quote}”</div>`).join('') +
     `</details>` +
     `<div class="order"><span class="lbl">STAGED ORDER</span>${f.proposed_order || ''}</div>` +
-    `<div class="actions">` +
+    (mdFix[f.id] ? (mdFix[f.id].s === 'fixed'
+      ? `<div class="actions"><span class="decided ok">✓ Order placed — see re-verification status above</span></div>`
+      : `<div class="actions"><span class="decided no">✗ Dismissed — “${mdFix[f.id].why || 'recorded'}”</span></div>`)
+    : `<div class="actions">` +
     `<button class="accept">Accept — stage order</button>` +
     `<button class="dismiss">Dismiss…</button>` +
     `<span class="rat">` +
@@ -203,9 +208,13 @@ function card(f) {
     `<button class="chip" data-r="known to me — monitoring in place">known — monitored</button>` +
     `<button class="chip" data-r="disagree with the evidence">disagree w/ evidence</button>` +
     `<input placeholder="…or type a rationale, Enter to record"></span>` +
-    `</div>`;
+    `</div>`);
   const actions = el.querySelector('.actions');
-  const rat = el.querySelector('.rat'), inp = rat.querySelector('input');
+  const rat = el.querySelector('.rat'), inp = rat && rat.querySelector('input');
+  if (mdFix[f.id]) {  // already decided in the record — status only, no handlers
+    el.classList.add(mdFix[f.id].s === 'fixed' ? 'accepted' : 'dismissedc');
+    return el;
+  }
   const dismissWith = why => {
     if (sawFixEvents || fixSubmitted) return;
     decisions[f.id] = 'dismiss:' + why;
@@ -279,17 +288,20 @@ function handle(e) {
     case 'cluster_done': case 'receipts_enforced': loadFindings(); break;
     case 'order_emitted':
       sawFixEvents = true;
+      mdFix[e.finding] = { s: 'fixed' };
       work(`[order] ✓ ${e.order}`);
       strip(e.finding,
         '<span class="decided ok">✓ Order placed — unverified until re-run</span>', 'accepted');
       break;
     case 'covered':
       sawFixEvents = true;
+      mdFix[e.finding] = { s: 'fixed' };
       strip(e.finding,
         '<span class="decided ok">✓ Covered by orders already placed</span>', 'accepted');
       break;
     case 'dismissed':
       sawFixEvents = true;
+      mdFix[e.finding] = { s: 'dismissed', why: e.rationale };
       work(`[dismissed] ${e.finding} — ${e.rationale}`);
       strip(e.finding,
         `<span class="decided no">✗ Dismissed — “${e.rationale}” (recorded)</span>`, 'dismissedc');
@@ -331,7 +343,7 @@ $('reverifybtn').onclick = () => {
 
 function resetView() {
   nLines = 0; meta = null; findings = []; decisions = {};
-  fixSubmitted = false; sawFixEvents = false; nChecks = 0; nKill = 0;
+  fixSubmitted = false; sawFixEvents = false; nChecks = 0; nKill = 0; mdFix = {};
   $('cards').innerHTML = ''; $('worklines').innerHTML = '';
   $('clean').style.display = 'none'; $('residual').style.display = 'none';
   $('bar').style.display = 'none';
@@ -339,7 +351,7 @@ function resetView() {
 }
 
 async function latest() {
-  if (runDir && nLines === 0 && !meta) return runDir;
+  if (pinnedRun) return pinnedRun;  // ?run= pins the view — no auto-follow
   const r = await fetch('/api/latest').then(r => r.json()).catch(() => null);
   return (r && r.run) || runDir;
 }

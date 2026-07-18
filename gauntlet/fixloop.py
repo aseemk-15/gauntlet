@@ -135,7 +135,7 @@ def apply_fixes(run, chart, findings: list[dict], decisions: dict[str, str]) -> 
                      "at": time.strftime("%Y-%m-%d %H:%M:%S")}
             orders.append(order)
             run.emit("order_emitted", order_id=order["order_id"], finding=f["id"],
-                     order=text[:90])
+                     order=text)
 
     amended_text = chart.text.rstrip() + "\n" + AMENDMENT
     amended_path = run.dir / "amended-chart.md"

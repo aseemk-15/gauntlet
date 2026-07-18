@@ -11,6 +11,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PORT = int(os.environ.get("GAUNTLET_UI_PORT", "3010"))
+# 127.0.0.1 by default. Set GAUNTLET_UI_HOST=0.0.0.0 to view from another device on
+# the same network — note that /api/attack then lets anyone on that network trigger
+# paid runs, so only do this on a trusted network for the demo window.
+HOST = os.environ.get("GAUNTLET_UI_HOST", "127.0.0.1")
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -110,5 +114,5 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(f"mission log: http://localhost:{PORT}/")
-    ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    print(f"mission log: http://localhost:{PORT}/ (bound to {HOST})")
+    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

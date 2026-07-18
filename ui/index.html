@@ -14,7 +14,8 @@
     --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   }
   *{box-sizing:border-box;margin:0}
-  body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+  body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);
+       padding-bottom:44px}
   /* patient banner */
   .banner{background:#22303E;color:#fff;padding:9px 20px;display:flex;
           align-items:center;gap:16px;flex-wrap:wrap}
@@ -47,7 +48,7 @@
   .tabs{background:var(--chrome);border-bottom:1px solid var(--line);
         display:flex;gap:2px;padding:0 16px;overflow-x:auto}
   .tab{font:600 13px var(--sans);color:var(--mut);border:0;background:none;
-       padding:11px 14px;cursor:pointer;border-bottom:3px solid transparent;
+       padding:11px 24px 11px 14px;cursor:pointer;border-bottom:3px solid transparent;
        white-space:nowrap;position:relative}
   .tab.on{color:var(--ink);border-bottom-color:var(--pen)}
   .tab .bdg{display:none;position:absolute;top:6px;right:2px;background:var(--pen);
@@ -60,7 +61,7 @@
   .chipbar>span{display:none}
   #verifychip{background:var(--grnbg);border:1px solid #BFDCC8;color:var(--grn);
               border-radius:14px;padding:3px 13px;font-weight:600}
-  #verifychip small{color:var(--mut);font-weight:400}
+  #verifychip small{color:#4A5866;font-weight:500;font-size:12px}
   #residchip{background:var(--penbg);border:1px solid #E7C2BD;color:var(--pen);
              border-radius:14px;padding:3px 13px;font-weight:600}
   #findchip{background:var(--ambbg);border:1px solid #E4D2A8;color:var(--amber);
@@ -68,7 +69,7 @@
   /* panes */
   .page{max-width:920px;margin:10px auto 60px;background:var(--paper);
         border:1px solid var(--line);border-radius:8px;
-        box-shadow:0 2px 14px rgba(28,40,51,.07);padding:26px 40px;min-height:420px}
+        box-shadow:0 2px 14px rgba(28,40,51,.07);padding:26px 40px;min-height:180px}
   .pane{display:none}
   .pane.on{display:block}
   .pane h4{font:700 11.5px var(--sans);letter-spacing:.1em;color:var(--mut);
@@ -156,7 +157,7 @@
       <span id="gpilltxt">attacking…</span>
     </div>
     <select id="caseSel">
-      <option value="eleanor">Vance, Eleanor — discharge 07/16 (hero case)</option>
+      <option value="eleanor">Vance, Eleanor — discharge 07/16 (featured demo)</option>
     </select>
     <button class="runbtn" id="run">▶ Run the Gauntlet</button>
   </div>
@@ -186,11 +187,13 @@
 
 <script>
 const $ = id => document.getElementById(id);
-let runDir = new URLSearchParams(location.search).get('run');
+const pinnedRun = new URLSearchParams(location.search).get('run');
+let runDir = pinnedRun;
 let nLines = 0, meta = null, findings = [], decisions = {};
 let fixSubmitted = false, sawFixEvents = false, docLoaded = false;
 let killn = 0, agentsLive = 0, attackTotal = 0, running = false;
 let planPane = null, planRaw = '', planEdited = false, pinned = null, insCursor = null;
+let fixState = {}, verified = false;  // event-sourced truth, immune to fetch races
 const LETTERS = 'ABCDEFGH';
 const norm = s => s.replace(/[—–−]/g, '-').replace(/[‘’]/g, "'")
                    .replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -389,14 +392,25 @@ function inkMarks() {
     badge(id, perTab[id] || 0, allDone);
   renderFlist();
 }
+function stateOf(f) {
+  const fs = fixState[f.id];
+  if (fs) return fs.state;
+  const d = decisions[f.id];
+  if (d === 'fix') return 'accepted';
+  if ((d || '').startsWith('dismiss')) return 'waiving';
+  return null;
+}
 function applyState(f, i) {
   const el = document.querySelector(`.ln[data-ex="${LETTERS[i]}"]`);
   if (!el) return;
   el.classList.remove('resolved', 'waived');
-  const d = decisions[f.id];
-  if (d === 'fix' || f._state === 'fixed') el.classList.add('resolved');
-  else if ((d || '').startsWith('dismiss') || f._state === 'dismissed')
-    el.classList.add('waived');
+  const s = stateOf(f);
+  if (s === 'fixed' || s === 'accepted') el.classList.add('resolved');
+  else if (s === 'dismissed' || s === 'waiving') el.classList.add('waived');
+}
+function refreshStates() {
+  findings.forEach((f, i) => applyState(f, i));
+  renderFlist();
 }
 function renderFlist() {
   const fl = $('flist');
@@ -404,9 +418,9 @@ function renderFlist() {
   fl.innerHTML = '<h4>Findings — adversarial review</h4>';
   findings.forEach((f, i) => {
     const d = document.createElement('div');
-    const st = (f._state === 'fixed' || decisions[f.id] === 'fix') ? 'resolved'
-      : (f._state === 'dismissed' || (decisions[f.id] || '').startsWith('dismiss'))
-        ? 'waived' : '';
+    const s = stateOf(f);
+    const st = (s === 'fixed' || s === 'accepted') ? 'resolved'
+      : (s === 'dismissed' || s === 'waiving') ? 'waived' : '';
     d.className = 'fl ' + st;
     const tabName = (TABDEFS.find(t => t[0] === f._tab) || ['', 'chart'])[1];
     d.innerHTML = `<span class="l">${LETTERS[i]}</span>${f.title}
@@ -426,16 +440,17 @@ function renderFlist() {
 function showPop(f, i, anchor, pin) {
   pinned = pin ? f.id : pinned;
   const sevCls = f.tier === 2 ? 't2' : f.tier === 3 ? 't3' : '';
-  const decided = decisions[f.id] || f._state;
+  const s = stateOf(f);
   const single = f.found_by === 1 ? ' · single-source, gate-confirmed' : '';
   let acts;
-  if (f._state === 'fixed') acts =
-    `<div class="status ok">✓ Orders placed — unverified until re-run</div>`;
-  else if (f._state === 'dismissed') acts =
-    `<div class="status no">✗ Dismissed — “${f._why || 'rationale recorded'}”</div>`;
-  else if (decided === 'fix') acts =
+  if (s === 'fixed') acts = verified
+    ? `<div class="status ok">✓ Orders placed — re-verified, nothing survived</div>`
+    : `<div class="status ok">✓ Orders placed — unverified until re-run</div>`;
+  else if (s === 'dismissed') acts =
+    `<div class="status no">✗ Dismissed — “${(fixState[f.id] || {}).why || 'rationale recorded'}”</div>`;
+  else if (s === 'accepted') acts =
     `<div class="status ok">✓ Accepted — order staged; transmits when all findings are decided</div>`;
-  else if ((decided || '').startsWith('dismiss')) acts =
+  else if (s === 'waiving') acts =
     `<div class="status no">✗ Dismissed — recorded</div>`;
   else acts =
     `<div class="acts"><button class="a" id="pacc">Accept — stage order</button>
@@ -454,12 +469,18 @@ function showPop(f, i, anchor, pin) {
       `<div class="rc"><b>${q.section}</b> — “${(q.quote || '').slice(0, 100)}”</div>`).join('') +
     `<div class="ord"><span class="lbl">STAGED ORDER</span>${f.proposed_order || ''}</div>` + acts;
   const pop = $('pop');
-  pop.className = (f._state === 'fixed' || decided === 'fix') ? 'res' : '';
+  pop.className = (s === 'fixed' || s === 'accepted') ? 'res' : '';
   pop.style.display = 'block';
   const r = anchor.getBoundingClientRect();
   pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
   pop.style.left = Math.max(8, Math.min(r.left + window.scrollX,
     window.scrollX + document.documentElement.clientWidth - 450)) + 'px';
+  requestAnimationFrame(() => {  // flip above the anchor if clipped below
+    const pr = pop.getBoundingClientRect();
+    if (pr.bottom > window.innerHeight - 34)
+      pop.style.top = Math.max(window.scrollY + 8,
+        r.top + window.scrollY - pr.height - 8) + 'px';
+  });
   const acc = $('pacc'), dis = $('pdis');
   if (acc) acc.onclick = () => decide(f, i, 'fix');
   if (dis) dis.onclick = () => { $('pchips').style.display = 'flex'; };
@@ -503,13 +524,21 @@ async function loadFindings() {
       setBtn('idle');
       return;
     }
+    inkMarks(); refreshStates();
+    if (verified) {  // fetch resolved after a replayed banner — don't clobber the end state
+      pill(true, 're-verified clean', true);
+      $('findchip').style.display = 'none';
+      setBtn('idle');
+      return;
+    }
     pill(true, `<b>${findings.length}</b> findings — in the chart`, true);
-    $('findchip').style.display = 'inline-block';
-    $('findchip').textContent =
-      `${findings.length} findings survived review — each needs a decision`;
-    $('findchip').onclick = () => selectTab('plan');
-    inkMarks();
-    if (!sawFixEvents) setBtn('decide');
+    if (!sawFixEvents) {
+      $('findchip').style.display = 'inline-block';
+      $('findchip').textContent =
+        `${findings.length} findings survived review — each needs a decision`;
+      $('findchip').onclick = () => selectTab('plan');
+      setBtn('decide');
+    }
   } catch (err) {}
 }
 let pendingIns = [];
@@ -554,24 +583,22 @@ function handle(e) {
     case 'meter':
       $('meter').textContent = `${e.t.toFixed(0)}s · $${e.cost.toFixed(2)} — measured`;
       break;
-    case 'order_emitted': {
+    case 'order_emitted':
       sawFixEvents = true;
+      fixState[e.finding] = { state: 'fixed' };
       insertOrder(e.order);
-      const f = findings.find(x => x.id === e.finding);
-      if (f) { f._state = 'fixed'; applyState(f, findings.indexOf(f)); }
-      renderFlist(); inkMarks();
-      break; }
-    case 'covered': {
+      refreshStates();
+      break;
+    case 'covered':
       sawFixEvents = true;
-      const f = findings.find(x => x.id === e.finding);
-      if (f) { f._state = 'fixed'; applyState(f, findings.indexOf(f)); }
-      renderFlist(); break; }
-    case 'dismissed': {
+      fixState[e.finding] = { state: 'fixed' };
+      refreshStates();
+      break;
+    case 'dismissed':
       sawFixEvents = true;
-      const f = findings.find(x => x.id === e.finding);
-      if (f) { f._state = 'dismissed'; f._why = e.rationale;
-        applyState(f, findings.indexOf(f)); }
-      renderFlist(); break; }
+      fixState[e.finding] = { state: 'dismissed', why: e.rationale };
+      refreshStates();
+      break;
     case 'amendment_written':
       $('findchip').textContent =
         `plan amended — ${e.orders} orders · not yet re-verified`;
@@ -585,7 +612,7 @@ function handle(e) {
       pill(true, 're-attacking the fixed dimensions…');
       break;
     case 'banner': {
-      running = false;
+      running = false; verified = true;
       const stats = (e.text.split(' — ')[1] || '')
         .replace(/ ?· attacked and not broken/, '');
       $('verifychip').style.display = 'inline-block';
@@ -593,7 +620,7 @@ function handle(e) {
         <small>· attacked and not broken · not a safety certification</small>`;
       $('findchip').style.display = 'none';
       pill(true, `re-verified clean — ${stats}`, true);
-      inkMarks();
+      refreshStates(); inkMarks();
       setBtn('idle');
       break; }
     case 'residual_gaps':
@@ -633,13 +660,14 @@ function resetView() {
   fixSubmitted = false; sawFixEvents = false; docLoaded = false;
   killn = 0; agentsLive = 0; attackTotal = 0; pinned = null;
   planRaw = ''; planEdited = false; insCursor = null; pendingIns = [];
+  fixState = {}; verified = false;
   $('pop').style.display = 'none';
   $('verifychip').style.display = 'none'; $('residchip').style.display = 'none';
   $('findchip').style.display = 'none';
   $('meter').textContent = '0s · $0.00';
 }
 async function latest() {
-  if (runDir && nLines === 0 && !meta) return runDir;
+  if (pinnedRun) return pinnedRun;  // ?run= pins the view — no auto-follow
   const r = await fetch('/api/latest').then(r => r.json()).catch(() => null);
   return (r && r.run) || runDir;
 }
@@ -667,7 +695,8 @@ async function loadCases() {
     for (const rec of (s.index || [])) {
       const o = document.createElement('option');
       o.value = rec.id;
-      o.textContent = (rec.visit_title || rec.id).slice(0, 58)
+      const t = rec.visit_title || rec.id;
+      o.textContent = (t.length > 56 ? t.slice(0, 55) + '…' : t)
         + ` — ${(rec.date || '').slice(0, 10)}`;
       $('caseSel').appendChild(o);
     }

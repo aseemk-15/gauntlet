@@ -211,7 +211,8 @@
 <script>
 const $ = id => document.getElementById(id);
 const stage = $('stage');
-let runDir = new URLSearchParams(location.search).get('run');
+const pinnedRun = new URLSearchParams(location.search).get('run');
+let runDir = pinnedRun;
 let nLines = 0, meta = null, mode = 'discharge';
 let agents = {}, laneSeen = [], killn = 0, findings = [];
 let decisions = {}, fixSubmitted = false, sawFixEvents = false, docLoaded = false;
@@ -554,7 +555,7 @@ function resetView() {
   $('runstamp').textContent = runDir.replace('runs/', '').toUpperCase();
 }
 async function latest() {
-  if (runDir && nLines === 0 && !meta) return runDir;
+  if (pinnedRun) return pinnedRun;  // ?run= pins the view — no auto-follow
   const r = await fetch('/api/latest').then(r => r.json()).catch(() => null);
   return (r && r.run) || runDir;
 }
