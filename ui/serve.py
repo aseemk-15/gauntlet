@@ -33,11 +33,11 @@ class Handler(SimpleHTTPRequestHandler):
             return
         route = self.path.split("?")[0]
         if route == "/":
-            self.path = "/ui/index.html"
+            self.path = "/ui/classic.html"   # the architect UI — demo main screen
         elif route == "/md":
             self.path = "/ui/md.html"
-        elif route == "/classic":
-            self.path = "/ui/classic.html"
+        elif route == "/emr":
+            self.path = "/ui/index.html"
         elif route == "/corridor":
             self.path = "/ui/corridor.html"
         super().do_GET()
@@ -71,6 +71,7 @@ class Handler(SimpleHTTPRequestHandler):
             if self.path == "/api/attack":
                 if body.get("target") == "eleanor":
                     chart = "assets/chart-eleanor-vance.md"
+                    agents = max(1, min(10, int(body.get("agents", 3) or 3)))
                     plan = str(body.get("plan_text", "")).strip()
                     if plan:  # physician edited the plan — attack the edited version
                         import re
@@ -82,7 +83,7 @@ class Handler(SimpleHTTPRequestHandler):
                         edited.parent.mkdir(exist_ok=True)
                         edited.write_text(new)
                         chart = str(edited)
-                    cmd = [cli, "run", chart]
+                    cmd = [cli, "run", chart, "--agents", str(agents)]
                 else:
                     cmd = [cli, "run", "--encounter", str(body["encounter"])]
                     summary = str(body.get("summary", "")).strip()

@@ -23,6 +23,8 @@ def main(argv=None):
     run.add_argument("--summary", help="path to a discharge summary to attack against "
                                        "the encounter's grounding record")
     run.add_argument("--amended", action="store_true", help="attack the amended plan")
+    run.add_argument("--agents", type=int, default=None,
+                     help="attackers per lane (default 3; 10 = the full 10x10 gauntlet)")
     run.add_argument("--summary-only", action="store_true", help="print chart summary and exit")
     fix = sub.add_parser("fix", help="clinician decisions -> order artifacts + amendment")
     fix.add_argument("run_dir", help="runs/<dir> containing findings.json")
@@ -49,7 +51,8 @@ def main(argv=None):
         if args.summary_only:
             return 0
         run = Run("eleanor" + ("-amended" if args.amended else ""))
-        results = fan_out(run, chart.text, DISCHARGE_LANES, AGENTS_PER_LANE)
+        results = fan_out(run, chart.text, DISCHARGE_LANES,
+                          args.agents or AGENTS_PER_LANE)
         (run.dir / "attack.json").write_text(json.dumps(results, indent=2))
         objections = [r for r in results if r.get("objection")]
         verdicts = judge_all(run, chart, objections)

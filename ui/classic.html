@@ -118,7 +118,7 @@
   .log{margin-top:22px}
   .loglines{font-family:var(--mono);font-size:11.5px;background:var(--panel2);
             border:1px solid var(--line);border-radius:3px;padding:10px 12px;
-            height:170px;overflow-y:auto}
+            height:132px;overflow-y:auto}
   .loglines div{padding:1.5px 0;color:var(--mut)}
   .loglines .kill em{color:var(--dim);font-style:normal}
   .loglines .kill b{color:var(--txt);font-weight:600}
@@ -204,7 +204,15 @@ const pane = $('chartpane');
 let runDir = new URLSearchParams(location.search).get('run');
 let nLines = 0, tiles = {}, meta = null, attackTotal = 0;
 let mode = 'discharge';
-let nAtk = 0, nKill = 0, nSurv = 0;
+let nAtk = 0, nKill = 0, nSurv = 0, lastCost = 0;
+// mock-faithful display labels for the real attack lanes (truthful aliases only)
+const LANE_LABELS = {
+  'drug-interactions': 'drug × drug', 'renal-electrolytes': 'dose × organ',
+  'follow-up-continuity': 'follow-up gaps', 'pending-results': 'pending results',
+  'outside-records': 'buried docs', 'volume-status': 'trajectory',
+  'med-rec-contradictions': 'med-rec conflicts', 'care-coordination': 'social / access',
+  'anticoagulation': 'anticoag / inr', 'infection-course': 'infection course',
+};
 let decisions = {}, findingsShown = [], fixSubmitted = false, sawFixEvents = false;
 
 function setBtn(state) {
@@ -238,7 +246,7 @@ function tile(agent, lane) {
   if (!row) {
     const l = document.createElement('div');
     l.className = 'lane'; l.dataset.lane = lane;
-    l.innerHTML = `<div class="lab">${lane.replace(/-/g, ' ')}</div><div class="cells"></div>`;
+    l.innerHTML = `<div class="lab">${LANE_LABELS[lane] || lane.replace(/-/g, ' ')}</div><div class="cells"></div>`;
     $('lanes').appendChild(l);
     row = l.querySelector('.cells');
   }
@@ -271,7 +279,7 @@ async function loadPlan() {
       const start = stripped.indexOf(m[0]) + m[0].length;
       $('plantext').textContent = stripped.slice(start).split(/\n## /)[0]
                                           .trim().split('\n').slice(0, 7).join('\n');
-      $('planhd').textContent = 'THE PLAN UNDER ATTACK';
+      $('planhd').textContent = 'DISCHARGE PLAN UNDER ATTACK';
     }
     if (meta.encounter) $('target').textContent = meta.encounter.slice(0, 52);
   } catch (err) {}
@@ -329,8 +337,12 @@ function card(f) {
     (f.quotes || []).slice(0, 3).map(q =>
       `<div class="rcpt"><span class="src">${q.section}</span> — “${(q.quote || '').slice(0, 120)}”</div>`).join('') +
     `<div class="rcpt"><span class="src">proposed</span> — <b>${(f.proposed_order || '').slice(0, 160)}</b></div>` +
-    `<div class="fixrow"><button class="fix" data-act="fix">PLACE ORDERS</button>` +
-    `<button class="fix dis" data-act="dismiss">DISMISS — DOCUMENT RATIONALE</button></div>`;
+    (fixedIds.has(f.id)
+      ? `<div class="fixrow"><span class="fixed-tag">✓ orders placed by clinician — unverified until re-run</span></div>`
+      : dismissedIds.has(f.id)
+      ? `<div class="fixrow"><span class="dis-tag">✗ dismissed — rationale documented</span></div>`
+      : `<div class="fixrow"><button class="fix" data-act="fix">PLACE ORDERS</button>` +
+        `<button class="fix dis" data-act="dismiss">DISMISS — DOCUMENT RATIONALE</button></div>`);
   el.querySelector('h3').onclick = () => showReceipts(f);
   el.querySelectorAll('.fix').forEach(b => b.onclick = e => {
     e.stopPropagation();
@@ -411,6 +423,7 @@ function handle(e) {
     case 'meter':
       $('mTime').textContent = e.t.toFixed(0) + 's';
       $('mCost').textContent = '$' + e.cost.toFixed(2);
+      lastCost = e.cost;
       break;
     case 'order_emitted':
       sawFixEvents = true;
@@ -444,7 +457,8 @@ function handle(e) {
       const stats = (e.text.split(' — ')[1] || '')
         .replace(/ ?· attacked and not broken/, '');
       $('bannersub').textContent =
-        stats + ' — attested: attacked and not broken. Not a safety certification.';
+        stats + (lastCost ? ` · $${lastCost.toFixed(2)}` : '')
+        + ' — attested: attacked and not broken. Not a safety certification.';
       log('[system] gauntlet complete — 0 surviving objections', 'sys');
       nSurv = 0; setMeters();
       setBtn('idle');
@@ -486,7 +500,7 @@ $('run').onclick = async () => {
     return;
   }
   setBtn('running');
-  const body = mode === 'discharge' ? { target: 'eleanor' }
+  const body = mode === 'discharge' ? { target: 'eleanor', agents: 10 }
     : { encounter: $('enc').value, summary: $('summary').value };
   await fetch('/api/attack', { method: 'POST',
     headers: { 'Content-Type': 'application/json' },

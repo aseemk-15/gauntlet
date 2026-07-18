@@ -145,7 +145,9 @@ unchanged above dry weight" are both the volume-management gap) are ONE finding 
 both facets in its claim. Do not merge genuinely different gaps.
 
 For each cluster, synthesize the single strongest statement of the finding, choose the
-best verbatim quotes (copy them EXACTLY as given), and the single best proposed order.
+best verbatim quotes (copy them EXACTLY as given, at most 3 per finding), and the single
+best proposed order. Output AT MOST 6 findings — merge aggressively; a large survivor
+set means heavy duplication, not many distinct gaps. Keep every "members" list complete.
 
 Respond with ONLY JSON:
 {"findings": [{
@@ -162,16 +164,45 @@ Respond with ONLY JSON:
 def cluster(run, survivors: list[dict]) -> list[dict]:
     if not survivors:
         return []
-    payload = [{k: v["objection"].get(k) for k in
-                ("claim", "quotes", "missing", "proposed_order", "lane")}
-               | {"agent": v["agent"]} for v in survivors]
-    resp = client().messages.create(
-        model=JUDGE_MODEL, max_tokens=JUDGE_MAX_TOKENS,
-        system=[{"type": "text", "text": CLUSTER_ROLE}],
-        messages=[{"role": "user", "content": json.dumps(payload, indent=2)}],
-    )
-    run.add_usage(JUDGE_MODEL, resp.usage)
-    findings = extract_json(resp.content[0].text)["findings"]
+    # Slim payload at swarm scale: one quote per objection (enforce_receipts recovers
+    # full receipts from the members' originals afterwards).
+    payload = []
+    for v in survivors:
+        o = v["objection"]
+        payload.append({"agent": v["agent"], "lane": o.get("lane"),
+                        "claim": o.get("claim"),
+                        "quotes": (o.get("quotes") or [])[:1],
+                        "missing": str(o.get("missing", ""))[:220],
+                        "proposed_order": str(o.get("proposed_order", ""))[:220]})
+    findings = None
+    note = ""
+    for attempt in (1, 2):  # retry once if the model breaks the JSON contract
+        resp = client().messages.create(
+            model=JUDGE_MODEL, max_tokens=8000,
+            system=[{"type": "text", "text": CLUSTER_ROLE + note}],
+            messages=[{"role": "user", "content": json.dumps(payload, indent=2)}],
+        )
+        run.add_usage(JUDGE_MODEL, resp.usage)
+        try:
+            findings = extract_json(resp.content[0].text)["findings"]
+            break
+        except (ValueError, json.JSONDecodeError, KeyError) as err:
+            run.emit("cluster_retry", attempt=attempt, err=str(err)[:80])
+            note = ("\nPREVIOUS ATTEMPT PRODUCED INVALID/TRUNCATED JSON. Output ONLY "
+                    "compact valid JSON, max 5 findings, max 2 quotes each, no prose.")
+    if findings is None:
+        # code fallback: one finding per lane from the strongest survivor
+        by_lane = {}
+        for v in survivors:
+            by_lane.setdefault(v["objection"].get("lane", "?"), []).append(v)
+        findings = []
+        for lane, vs in list(by_lane.items())[:6]:
+            o = vs[0]["objection"]
+            findings.append({"id": f"{lane}-finding", "title": str(o.get("claim", ""))[:80],
+                             "claim": o.get("claim"), "members": [v["agent"] for v in vs],
+                             "quotes": o.get("quotes", []), "missing": o.get("missing"),
+                             "proposed_order": o.get("proposed_order")})
+        run.emit("cluster_fallback", findings=len(findings))
     for f in findings:
         f["found_by"] = len(f.get("members", []))
         run.emit("finding", id=f["id"], title=f["title"], found_by=f["found_by"])
