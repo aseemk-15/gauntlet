@@ -2,121 +2,185 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>THE GAUNTLET — mission log</title>
 <style>
-  :root {
-    --bg: #0a0e12; --panel: #10161d; --edge: #1e2933; --txt: #c9d6e2;
-    --dim: #5a6b7a; --amber: #e8b23a; --red: #e5484d; --green: #46a758;
-    --cyan: #3fb2c6;
+  :root{
+    --bg:#0B1017; --panel:#121A24; --panel2:#0E1520; --line:#1D2938;
+    --txt:#D7E1EA; --mut:#6C7A88; --dim:#3A4754;
+    --acc:#4FC3E0; --red:#E5484D; --amb:#E2A33C; --grn:#3FBF6F;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
   }
-  * { box-sizing: border-box; margin: 0; }
-  body { background: var(--bg); color: var(--txt);
-         font: 13px/1.45 "SF Mono", ui-monospace, Menlo, monospace; padding: 14px; }
-  header { display: flex; justify-content: space-between; align-items: baseline;
-           border-bottom: 1px solid var(--edge); padding-bottom: 8px; margin-bottom: 12px; }
-  h1 { font-size: 16px; letter-spacing: 3px; color: #fff; }
-  h1 small { color: var(--dim); letter-spacing: 0; font-weight: normal; margin-left: 10px; }
-  #meter { color: var(--cyan); font-size: 14px; }
-  #phase { color: var(--amber); letter-spacing: 2px; font-size: 12px; margin-bottom: 8px;
-           min-height: 15px; }
-  .cols { display: grid; grid-template-columns: minmax(430px, 1fr) 1.2fr; gap: 14px; }
-  .panel { background: var(--panel); border: 1px solid var(--edge); border-radius: 6px;
-           padding: 10px; }
-  .panel h2 { font-size: 11px; color: var(--dim); letter-spacing: 2px; margin-bottom: 8px;
-              text-transform: uppercase; }
+  *{box-sizing:border-box;margin:0}
+  html{background:var(--bg)}
+  body{background:var(--bg);color:var(--txt);font-family:var(--sans);
+       font-size:14px;line-height:1.5;padding:0}
+  .wrap{max-width:1240px;margin:0 auto;padding:18px 24px 48px}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+       border-bottom:1px solid var(--line);padding-bottom:13px}
+  .wordmark{font-family:var(--mono);font-weight:700;font-size:18px;letter-spacing:.18em}
+  .wordmark span{color:var(--acc)}
+  .chip{font-family:var(--mono);font-size:11.5px;color:var(--mut);
+        border:1px solid var(--line);border-radius:3px;padding:4px 9px;
+        background:var(--panel2)}
+  .chip b{color:var(--txt);font-weight:600}
+  .chip.mode{margin-left:auto;color:#08222B;background:var(--acc);
+             border-color:var(--acc);font-weight:700;letter-spacing:.1em}
+  .meter{display:flex;gap:26px;flex-wrap:wrap;font-family:var(--mono);
+         font-variant-numeric:tabular-nums;margin:14px 0 6px}
+  .m .k{font-size:10px;letter-spacing:.16em;color:var(--mut);text-transform:uppercase}
+  .m .v{font-size:21px;font-weight:700}
+  .m .v.red{color:var(--red)} .m .v.grn{color:var(--grn)} .m .v.acc{color:var(--acc)}
+  #phase{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--amb);
+         min-height:16px;margin:0 0 14px;text-transform:uppercase}
+  .main{display:grid;grid-template-columns:minmax(430px,1fr) minmax(380px,1fr);gap:20px}
+  @media(max-width:920px){.main{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+         padding:15px;margin-bottom:16px}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--mut);
+           text-transform:uppercase;margin:0 0 10px}
+  /* plan under attack */
+  .plan{font-family:var(--mono);font-size:12px;background:var(--panel2);
+        border:1px solid var(--line);border-radius:3px;padding:11px 12px;
+        margin-bottom:13px;white-space:pre-wrap;color:var(--mut)}
+  .plan .hd{color:var(--acc);font-weight:700;margin-bottom:5px;white-space:normal}
   /* lane grid */
-  .lane { display: grid; grid-template-columns: 168px repeat(3, 1fr); gap: 4px;
-          margin-bottom: 4px; align-items: stretch; }
-  .lane-name { color: var(--dim); font-size: 11px; align-self: center;
-               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tile { border: 1px solid var(--edge); border-radius: 3px; min-height: 26px;
-          padding: 3px 6px; font-size: 10px; color: var(--dim);
-          overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-          transition: all .3s; }
-  .tile.pending  { opacity: .45; }
-  .tile.objection{ border-color: var(--amber); color: var(--amber); }
-  .tile.conceded { opacity: .35; text-decoration: line-through; }
-  .tile.killed   { border-color: #572528; color: #8a5a5c; background: #1a1113;
-                   opacity: .8; }
-  .tile.survivor { border-color: var(--red); color: #fff; background: #3a1518;
-                   box-shadow: 0 0 8px #e5484d55; }
-  /* kill log */
-  #killlog { max-height: 200px; overflow-y: auto; font-size: 11px; }
-  #killlog div { padding: 2px 0; border-bottom: 1px dashed #16202a; }
-  #killlog .t { color: var(--dim); }
-  #killlog .test { color: var(--amber); }
-  /* cards */
-  .card { border: 1px solid var(--red); border-radius: 6px; padding: 10px;
-          margin-bottom: 10px; background: #171114; cursor: pointer; }
-  .card.fixed { border-color: var(--green); background: #101711; }
-  .card.dismissed { border-color: var(--edge); opacity: .6; }
-  .card .tier { font-size: 10px; color: var(--red); letter-spacing: 1px; }
-  .card.fixed .tier { color: var(--green); }
-  .card h3 { font-size: 13px; color: #fff; margin: 3px 0; }
-  .card .badge { display: inline-block; font-size: 10px; color: var(--cyan);
-                 border: 1px solid var(--cyan); border-radius: 8px; padding: 0 7px;
-                 margin: 2px 0; }
-  .card .cite { font-size: 10px; color: var(--dim); }
-  .card .quote { font-size: 11px; color: var(--amber); margin: 4px 0 0 8px; }
-  .card .quote i { color: var(--dim); font-style: normal; }
-  .card .order { font-size: 11px; color: var(--green); margin-top: 5px; }
-  /* orders feed + banner */
-  #orders div { color: var(--green); font-size: 11px; padding: 1px 0; }
-  #orders div.dismissed { color: var(--dim); }
-  #banner { display: none; margin-top: 12px; border: 2px solid var(--green);
-            border-radius: 6px; padding: 14px; text-align: center; }
-  #banner .big { color: var(--green); font-size: 17px; letter-spacing: 1px; }
-  #banner .note { color: var(--dim); font-size: 11px; margin-top: 4px; }
-  #residual { display: none; margin-top: 12px; border: 2px solid var(--red);
-              border-radius: 6px; padding: 12px; }
-  #residual .big { color: var(--red); font-size: 14px; }
+  .lanes{display:flex;flex-direction:column;gap:5px}
+  .lane{display:grid;grid-template-columns:158px 1fr;align-items:center;gap:10px}
+  .lane .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+             color:var(--dim);text-transform:uppercase;text-align:right;
+             overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cells{display:flex;gap:5px}
+  .cell{width:24px;height:24px;border-radius:2px;background:var(--panel2);
+        border:1px solid var(--line);
+        transition:background .25s,border-color .25s,opacity .3s}
+  .cell.atk{background:rgba(79,195,224,.28);border-color:var(--acc);
+            animation:pulse 1s ease-in-out infinite}
+  .cell.obj{background:rgba(226,163,60,.25);border-color:var(--amb);animation:none}
+  .cell.dead{background:var(--panel2);border-color:transparent;opacity:.22;animation:none}
+  .cell.surv{background:rgba(229,72,77,.32);border-color:var(--red);
+             box-shadow:0 0 10px rgba(229,72,77,.45);animation:none}
+  @keyframes pulse{50%{background:rgba(79,195,224,.5)}}
+  @media(prefers-reduced-motion:reduce){.cell{transition:none}.cell.atk{animation:none}}
+  .note{color:var(--dim);font-size:11px;font-family:var(--mono);margin-top:12px}
+  /* verdict cards */
+  .empty{color:var(--dim);font-family:var(--mono);font-size:12px;padding:24px 8px;
+         text-align:center;border:1px dashed var(--line);border-radius:3px}
+  .card{border:1px solid var(--red);border-left:3px solid var(--red);border-radius:3px;
+        background:var(--panel2);padding:12px 14px;margin-bottom:12px;cursor:pointer}
+  .card.fixed{border-color:var(--amb);border-left-color:var(--amb)}
+  .card.dismissed{border-color:var(--line);border-left-color:var(--dim);opacity:.6}
+  .card .lanechip{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+                  color:var(--red);text-transform:uppercase}
+  .card.fixed .lanechip{color:var(--amb)}
+  .card h3{margin:5px 0 7px;font-size:14.5px;font-weight:650;text-wrap:balance}
+  .badge{display:inline-block;font-family:var(--mono);font-size:10px;color:var(--acc);
+         border:1px solid var(--acc);border-radius:8px;padding:0 8px;margin:0 0 6px}
+  .cite{font-family:var(--mono);font-size:10px;color:var(--mut);margin-bottom:2px}
+  .cite.ok{color:var(--grn)}
+  .rcpt{font-family:var(--mono);font-size:11.5px;color:var(--mut);
+        border-left:2px solid var(--line);padding:2px 0 2px 10px;margin:6px 0}
+  .rcpt .src{color:var(--acc)}
+  .order{font-family:var(--mono);font-size:11.5px;color:var(--grn);margin-top:7px}
+  .statusrow{font-family:var(--mono);font-size:11px;color:var(--amb);margin-top:8px}
+  /* orders + kill log */
+  #orders div{font-family:var(--mono);font-size:11.5px;color:var(--grn);padding:1.5px 0}
+  #orders div.dismissed{color:var(--dim)}
+  .loglines{font-family:var(--mono);font-size:11.5px;background:var(--panel2);
+            border:1px solid var(--line);border-radius:3px;padding:10px 12px;
+            max-height:190px;overflow-y:auto}
+  .loglines div{padding:1.5px 0;color:var(--mut);
+                border-bottom:1px dashed rgba(29,41,56,.55)}
+  .loglines em{color:var(--dim);font-style:normal}
+  .loglines b{color:var(--txt);font-weight:600}
+  .loglines .test{color:var(--amb)}
+  /* banner */
+  #banner{display:none;font-family:var(--mono);text-align:center;
+          border:1px solid var(--grn);border-radius:3px;color:var(--grn);
+          padding:16px 12px;margin-bottom:16px}
+  #banner .big{font-size:16px;font-weight:700;letter-spacing:.12em}
+  #banner .sub{font-size:11px;color:var(--mut);margin-top:6px}
+  #residual{display:none;font-family:var(--mono);border:1px solid var(--red);
+            border-radius:3px;color:var(--red);padding:13px;margin-bottom:16px;
+            font-size:12.5px}
+  /* paste panel */
+  select,textarea{width:100%;background:var(--panel2);color:var(--txt);
+    border:1px solid var(--line);border-radius:3px;padding:7px;
+    font:12px var(--mono);margin-bottom:7px}
+  .btn{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;font-weight:700;
+       width:100%;padding:11px;border-radius:3px;border:1px solid var(--acc);
+       background:transparent;color:var(--acc);cursor:pointer}
+  .btn:hover{background:rgba(79,195,224,.08)}
+  .btn:disabled{opacity:.35;cursor:default}
+  #attackmsg{font-family:var(--mono);font-size:11px;color:var(--dim)}
   /* chart side panel */
-  #chartpane { position: fixed; top: 0; right: -52%; width: 50%; height: 100%;
-               background: var(--panel); border-left: 1px solid var(--edge);
-               padding: 16px; overflow-y: auto; transition: right .25s; z-index: 5;
-               white-space: pre-wrap; font-size: 11.5px; }
-  #chartpane.open { right: 0; }
-  #chartpane mark { background: #4d3800; color: #ffd97a; padding: 0 2px; }
-  #chartpane .x { position: sticky; top: 0; float: right; cursor: pointer;
-                  color: var(--dim); font-size: 16px; }
-  select, textarea, button { width: 100%; background: var(--bg); color: var(--txt);
-    border: 1px solid var(--edge); border-radius: 4px; padding: 6px;
-    font: 12px "SF Mono", ui-monospace, monospace; margin-bottom: 6px; }
-  button { cursor: pointer; color: var(--amber); border-color: var(--amber);
-           letter-spacing: 2px; }
-  button:disabled { opacity: .4; }
+  #chartpane{position:fixed;top:0;right:-54%;width:52%;height:100%;
+             background:var(--panel);border-left:1px solid var(--line);
+             padding:16px 18px;overflow-y:auto;transition:right .25s;z-index:5;
+             white-space:pre-wrap;font:11.5px var(--mono);color:var(--mut)}
+  #chartpane.open{right:0}
+  #chartpane mark{background:rgba(226,163,60,.25);color:#FFD97A;padding:0 2px}
+  #chartpane .x{position:sticky;top:0;float:right;cursor:pointer;
+                color:var(--dim);font-size:16px}
 </style>
 </head>
 <body>
-<header>
-  <h1>THE GAUNTLET <small id="runid">waiting for a run…</small></h1>
-  <div id="meter">—</div>
-</header>
-<div id="phase"></div>
-<div class="cols">
-  <div>
-    <div class="panel"><h2>attack lanes</h2><div id="grid"></div></div>
-    <div class="panel" style="margin-top:12px"><h2>kill log — died in review</h2>
-      <div id="killlog"></div></div>
+<div class="wrap">
+  <div class="top">
+    <div class="wordmark">THE <span>GAUNTLET</span></div>
+    <div class="chip" id="runchip">RUN <b id="runid">waiting…</b></div>
+    <div class="chip" id="targetchip" style="display:none">TARGET <b id="target"></b></div>
+    <div class="chip mode" id="modechip">LIVE</div>
   </div>
-  <div>
-    <div class="panel"><h2>surviving objections — receipts attached</h2>
-      <div id="cards"><span style="color:var(--dim)">none yet</span></div></div>
-    <div class="panel" style="margin-top:12px"><h2>clinician decisions → orders</h2>
-      <div id="orders"><span style="color:var(--dim)">—</span></div></div>
-    <div id="banner"><div class="big"></div>
-      <div class="note">Not a safety certification.</div></div>
-    <div id="residual"><div class="big"></div></div>
-    <div class="panel" style="margin-top:12px"><h2>attack your own summary — live run</h2>
-      <select id="enc">
-        <option value="covid-inpt">COVID inpatient admission</option>
-        <option value="annual-htn">General exam — new hypertension</option>
-        <option value="hospice-1">Hospice admission — end-stage colon cancer</option>
-        <option value="hospice-2">Hospice admission — colon cancer + cardiac</option>
-      </select>
-      <textarea id="summary" rows="7" placeholder="Paste a discharge summary for this encounter. Leave empty to attack the encounter's own note/AVS."></textarea>
-      <button id="attackbtn" onclick="launchAttack()">RUN THE GAUNTLET</button>
-      <span id="attackmsg" style="color:var(--dim);font-size:11px"></span>
+
+  <div class="meter">
+    <div class="m"><div class="k">Attacks</div><div class="v acc" id="mAtk">0</div></div>
+    <div class="m"><div class="k">Killed in review</div><div class="v" id="mKill">0</div></div>
+    <div class="m"><div class="k">Survivors</div><div class="v red" id="mSurv">0</div></div>
+    <div class="m"><div class="k">Elapsed</div><div class="v" id="mTime">0s</div></div>
+    <div class="m"><div class="k">Cost</div><div class="v" id="mCost">$0.00</div></div>
+    <div class="m"><div class="k">API calls</div><div class="v" id="mCalls">0</div></div>
+  </div>
+  <div id="phase"></div>
+
+  <div class="main">
+    <div>
+      <div class="panel">
+        <p class="eyebrow" id="swarmhead">attack swarm</p>
+        <div class="plan" id="plancard" style="display:none"><div class="hd">THE PLAN UNDER ATTACK</div><div id="plantext"></div></div>
+        <div class="lanes" id="grid"></div>
+        <p class="note">live agent runs — elapsed, cost, and every receipt are measured
+        and machine-verified; nothing on this page is simulated</p>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">judge — kill log</p>
+        <div class="loglines" id="killlog"></div>
+      </div>
+    </div>
+    <div>
+      <div id="banner"><div class="big">0 SURVIVING OBJECTIONS</div><div class="sub"></div></div>
+      <div id="residual"></div>
+      <div class="panel">
+        <p class="eyebrow">surviving objections — receipts or death</p>
+        <div id="cards"><div class="empty">No objections yet.</div></div>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">clinician decisions → orders</p>
+        <div id="orders"><div class="empty">—</div></div>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">attack your own summary — live run</p>
+        <select id="enc">
+          <option value="covid-inpt">COVID inpatient admission</option>
+          <option value="annual-htn">General exam — new hypertension</option>
+          <option value="hospice-1">Hospice admission — end-stage colon cancer</option>
+          <option value="hospice-2">Hospice admission — colon cancer + cardiac</option>
+        </select>
+        <textarea id="summary" rows="7" placeholder="Paste a discharge summary for this encounter. Leave empty to attack the encounter's own note/AVS."></textarea>
+        <button class="btn" id="attackbtn" onclick="launchAttack()">▶ RUN THE GAUNTLET</button>
+        <span id="attackmsg"></span>
+      </div>
     </div>
   </div>
 </div>
@@ -127,8 +191,9 @@
 const $ = id => document.getElementById(id);
 const pane = $('chartpane');
 let runDir = new URLSearchParams(location.search).get('run');
-let nLines = 0, tiles = {}, findings = {}, meta = null, attackTotal = 0;
+let nLines = 0, tiles = {}, meta = null, attackTotal = 0;
 let fixedIds = new Set(), dismissedIds = new Set();
+let nAtk = 0, nKill = 0, nSurv = 0;
 
 const norm = s => s.replace(/[—–−]/g, '-').replace(/[‘’]/g, "'")
                    .replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
@@ -139,45 +204,63 @@ async function latest() {
   return r && r.run;
 }
 
+function setMeters() {
+  $('mAtk').textContent = nAtk; $('mKill').textContent = nKill;
+  $('mSurv').textContent = nSurv;
+}
+
 function tile(agent, lane) {
   if (tiles[agent]) return tiles[agent];
-  let laneRow = document.querySelector(`[data-lane="${lane}"]`);
-  if (!laneRow) {
-    laneRow = document.createElement('div');
-    laneRow.className = 'lane'; laneRow.dataset.lane = lane;
-    laneRow.innerHTML = `<div class="lane-name">${lane}</div>`;
-    $('grid').appendChild(laneRow);
+  let row = document.querySelector(`[data-lane="${lane}"] .cells`);
+  if (!row) {
+    const l = document.createElement('div');
+    l.className = 'lane'; l.dataset.lane = lane;
+    l.innerHTML = `<div class="lab">${lane}</div><div class="cells"></div>`;
+    $('grid').appendChild(l);
+    row = l.querySelector('.cells');
   }
   const t = document.createElement('div');
-  t.className = 'tile pending'; t.textContent = agent.split('#')[1] ? '#' + agent.split('#')[1] : agent;
-  laneRow.appendChild(t);
+  t.className = 'cell';
+  row.appendChild(t);
   tiles[agent] = t;
   return t;
 }
 
-function setTile(agent, lane, cls, txt) {
+function setTile(agent, lane, cls, tip) {
   const t = tile(agent, lane);
-  t.className = 'tile ' + cls;
-  if (txt) { t.textContent = txt; t.title = txt; }
+  t.className = 'cell ' + cls;
+  if (tip) t.title = tip;
 }
 
 function killRow(e) {
   const d = document.createElement('div');
-  d.innerHTML = `<span class="t">${e.agent}</span> — failed <span class="test">` +
-    `${e.test}</span>: ${(e.why || '').slice(0, 110)}`;
+  d.innerHTML = `<em>[judge]</em> <b>${e.agent}</b> — failed ` +
+    `<span class="test">${e.test}</span>: ${(e.why || '').slice(0, 120)}`;
   $('killlog').prepend(d);
+}
+
+async function loadPlan() {
+  if (!meta || !meta.chart) return;
+  try {
+    const txt = await fetch('/' + meta.chart).then(r => r.text());
+    const m = txt.match(/^##+ .*UNDER ATTACK.*$/m);
+    if (!m) return;
+    const start = txt.indexOf(m[0]) + m[0].length;
+    let body = txt.slice(start).split(/\n##? /)[0].trim()
+                  .split('\n').slice(0, 7).join('\n');
+    $('plantext').textContent = body;
+    $('plancard').style.display = 'block';
+  } catch (err) {}
 }
 
 async function showReceipts(f) {
   const src = (meta && meta.chart) || 'assets/chart-eleanor-vance.md';
   const txt = await fetch('/' + src).then(r => r.text());
-  const stripped = txt.replace(/<!--[\s\S]*?-->/g, '');
-  let html = stripped.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  let html = txt.replace(/<!--[\s\S]*?-->/g, '')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;');
   for (const q of (f.quotes || [])) {
     for (const frag of (q.quote || '').split('...')) {
       const f2 = frag.trim(); if (f2.length < 6) continue;
-      // find the fragment tolerant of dash variants by scanning normalized text
-      const idx = norm(html.toLowerCase()).indexOf(norm(f2.toLowerCase()));
       const esc = f2.replace(/&/g, '&amp;').replace(/</g, '&lt;')
                     .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
                     .replace(/[—–−-]/g, '[—–−-]').replace(/\s+/g, '\\s+');
@@ -197,65 +280,89 @@ function card(f) {
                         + (dismissedIds.has(f.id) ? ' dismissed' : '');
   el.id = 'card-' + f.id;
   const single = f.found_by === 1 ? ' · SINGLE-SOURCE' : '';
+  const gate = f.gate === 'confirmed' ? ' · GATE-CONFIRMED' : '';
   el.innerHTML =
-    `<div class="tier">${f.tier_label || ''}</div>` +
+    `<div class="lanechip">■ ${f.tier_label || ''}</div>` +
     `<h3>${f.title}</h3>` +
-    `<span class="badge">found independently by ${f.found_by} of ${attackTotal || 30}${single}</span>` +
+    `<span class="badge">found independently by ${f.found_by} of ${attackTotal || 30}${single}${gate}</span>` +
     `<div class="cite">${f.citation || ''}</div>` +
     (f.receipts_verified ?
-      `<div class="cite" style="color:var(--green)">receipts machine-verified verbatim ✓</div>` : '') +
+      `<div class="cite ok">receipts machine-verified verbatim ✓</div>` : '') +
     (f.quotes || []).slice(0, 3).map(q =>
-      `<div class="quote"><i>[${q.section}]</i> “${(q.quote || '').slice(0, 110)}”</div>`).join('') +
-    `<div class="order">▸ ${f.proposed_order || ''}</div>`;
+      `<div class="rcpt"><span class="src">${q.section}</span> — “${(q.quote || '').slice(0, 120)}”</div>`).join('') +
+    `<div class="order">▸ ${f.proposed_order || ''}</div>` +
+    (fixedIds.has(f.id) ?
+      `<div class="statusrow">✓ orders placed by clinician — unverified until re-run</div>` : '');
   el.onclick = () => showReceipts(f);
   return el;
+}
+
+async function loadFindings() {
+  try {
+    const fs = await fetch('/' + runDir + '/findings.json').then(r => r.json());
+    $('cards').innerHTML = '';
+    for (const f of fs) $('cards').appendChild(card(f));
+  } catch (err) {}
 }
 
 function handle(e) {
   switch (e.type) {
     case 'attack_begin':
-      if (!attackTotal) attackTotal = e.agents;  // keep the initial swarm size for badges
+      if (!attackTotal) attackTotal = e.agents;
       $('grid').innerHTML = ''; tiles = {};
-      $('phase').textContent = e.reverify ? '' : `ATTACK — ${e.agents} agents · ${e.lanes} lanes`;
+      nAtk = 0; nKill = 0; nSurv = 0; setMeters();
+      $('swarmhead').textContent =
+        `attack swarm — ${e.lanes} lanes · ${e.agents} agents`;
+      $('phase').textContent = `attack — ${e.agents} agents launched · chart prefix cached`;
       break;
     case 'reverify_begin':
-      $('phase').textContent = `TARGETED RE-VERIFICATION — lanes: ${e.targets}`;
-      $('grid').innerHTML = ''; tiles = {}; $('killlog').innerHTML = '';
+      $('phase').textContent = `targeted re-verification — ${e.targets}`;
+      $('killlog').innerHTML = '';
       break;
-    case 'attacker_start': tile(e.agent, e.lane); break;
-    case 'objection': setTile(e.agent, e.lane, 'objection', '⚔ ' + (e.claim || '')); break;
-    case 'no_objection': setTile(e.agent, e.lane, 'conceded', 'conceded'); break;
-    case 'judge_begin': $('phase').textContent = `JUDGE — ${e.objections} objections · four tests · default kill`; break;
-    case 'gate_begin': $('phase').textContent = `CONFIRMATION GATE — ${e.candidates} candidate(s) · max strictness`; break;
+    case 'attacker_start': tile(e.agent, e.lane).classList.add('atk');
+      nAtk++; setMeters(); break;
+    case 'objection': setTile(e.agent, e.lane, 'obj', e.claim || ''); break;
+    case 'no_objection': setTile(e.agent, e.lane, 'dead', 'conceded'); break;
+    case 'judge_begin':
+      $('phase').textContent = `judge — ${e.objections} objections · four tests · default kill`;
+      break;
+    case 'gate_begin':
+      $('phase').textContent = `confirmation gate — ${e.candidates} candidate(s) · max strictness`;
+      break;
     case 'killed':
-      setTile(e.agent, e.lane, 'killed', '✕ ' + (e.test || ''));
-      killRow(e); break;
+      setTile(e.agent, e.lane, 'dead', e.why || '');
+      nKill++; setMeters(); killRow(e); break;
     case 'survivor':
-      setTile(e.agent, e.lane, 'survivor', '■ SURVIVED');
-      break;
-    case 'finding': break; // cards come from findings.json for full receipts
+      setTile(e.agent, e.lane, 'surv', e.why || '');
+      nSurv++; setMeters(); break;
     case 'cluster_done':
-      $('phase').textContent = `${e.findings} DISTINCT FINDINGS`; loadFindings(); break;
-    case 'meter': {
-      const last = e; $('meter').textContent =
-        `${(e.t).toFixed(1)}s · $${e.cost.toFixed(2)} · ${e.calls} calls — real, measured`;
-      break; }
+      $('phase').textContent = `${e.findings} distinct findings`;
+      loadFindings(); break;
+    case 'receipts_enforced': loadFindings(); break;
+    case 'meter':
+      $('mTime').textContent = e.t.toFixed(0) + 's';
+      $('mCost').textContent = '$' + e.cost.toFixed(2);
+      $('mCalls').textContent = e.calls;
+      break;
     case 'order_emitted': {
-      if ($('orders').firstChild && $('orders').firstChild.tagName === 'SPAN')
-        $('orders').innerHTML = '';
+      if ($('orders').querySelector('.empty')) $('orders').innerHTML = '';
       const d = document.createElement('div');
       d.textContent = `✓ ${e.order} — order transmitted`;
       $('orders').appendChild(d);
       fixedIds.add(e.finding);
-      const c = $('card-' + e.finding); if (c) c.classList.add('fixed');
+      const c = $('card-' + e.finding);
+      if (c && !c.classList.contains('fixed')) {
+        c.classList.add('fixed');
+        c.insertAdjacentHTML('beforeend',
+          `<div class="statusrow">✓ orders placed by clinician — unverified until re-run</div>`);
+      }
       break; }
     case 'covered': {
       fixedIds.add(e.finding);
       const c = $('card-' + e.finding); if (c) c.classList.add('fixed');
       break; }
     case 'dismissed': {
-      if ($('orders').firstChild && $('orders').firstChild.tagName === 'SPAN')
-        $('orders').innerHTML = '';
+      if ($('orders').querySelector('.empty')) $('orders').innerHTML = '';
       const d = document.createElement('div'); d.className = 'dismissed';
       d.textContent = `✗ ${e.finding} dismissed — ${e.rationale}`;
       $('orders').appendChild(d);
@@ -263,29 +370,25 @@ function handle(e) {
       const c = $('card-' + e.finding); if (c) c.classList.add('dismissed');
       break; }
     case 'amendment_written':
-      $('phase').textContent = `AMENDMENT WRITTEN — supersedes ${e.supersedes} · ${e.orders} orders`;
+      $('phase').textContent =
+        `amendment written — supersedes ${e.supersedes} · ${e.orders} orders`;
       if (meta) meta.chart = runDir + '/amended-chart.md';
       break;
     case 'banner':
       $('banner').style.display = 'block';
-      $('banner').querySelector('.big').textContent = e.text;
+      $('banner').querySelector('.big').textContent =
+        e.text.split(' — ')[0];
+      $('banner').querySelector('.sub').textContent =
+        (e.text.split(' — ')[1] || '') + ' — attacked and not broken. Not a safety certification.';
       $('phase').textContent = '';
       break;
     case 'residual_gaps':
       $('residual').style.display = 'block';
-      $('residual').querySelector('.big').textContent =
-        `${e.count} objection(s) survived the gate — the fix was incomplete. ` +
-        `That is the product working.`;
+      $('residual').textContent =
+        `${e.count} objection(s) survived the confirmation gate — the fix was ` +
+        `incomplete. That is the product working.`;
       break;
   }
-}
-
-async function loadFindings() {
-  try {
-    const fs = await fetch('/' + runDir + '/findings.json').then(r => r.json());
-    $('cards').innerHTML = '';
-    for (const f of fs) { findings[f.id] = f; $('cards').appendChild(card(f)); }
-  } catch (err) {}
 }
 
 async function launchAttack() {
@@ -306,17 +409,31 @@ async function launchAttack() {
 async function poll() {
   const rd = await latest();
   if (rd) {
-    if (rd !== runDir) {  // new run appeared — reset everything
-      runDir = rd; nLines = 0; tiles = {}; findings = {}; attackTotal = 0;
+    if (rd !== runDir) {
+      runDir = rd; nLines = 0; tiles = {}; attackTotal = 0;
+      nAtk = 0; nKill = 0; nSurv = 0; setMeters();
       fixedIds = new Set(); dismissedIds = new Set();
       $('grid').innerHTML = ''; $('killlog').innerHTML = '';
-      $('cards').innerHTML = '<span style="color:var(--dim)">none yet</span>';
-      $('orders').innerHTML = '<span style="color:var(--dim)">—</span>';
+      $('cards').innerHTML = '<div class="empty">No objections yet.</div>';
+      $('orders').innerHTML = '<div class="empty">—</div>';
       $('banner').style.display = 'none'; $('residual').style.display = 'none';
+      $('plancard').style.display = 'none';
       $('runid').textContent = rd.replace('runs/', '');
+      const mode = rd.includes('summary') ? 'SUMMARY UNDER ATTACK'
+                 : rd.includes('ambient') ? 'AMBIENT' : 'DISCHARGE';
+      $('modechip').textContent = mode;
       meta = null;
     }
-    if (!meta) meta = await fetch('/' + runDir + '/meta.json').then(r => r.json()).catch(() => null);
+    if (!meta) {
+      meta = await fetch('/' + runDir + '/meta.json').then(r => r.json()).catch(() => null);
+      if (meta) {
+        if (meta.encounter) {
+          $('target').textContent = meta.encounter;
+          $('targetchip').style.display = '';
+        } else $('targetchip').style.display = 'none';
+        loadPlan();
+      }
+    }
     const txt = await fetch('/' + runDir + '/events.jsonl').then(r => r.text()).catch(() => '');
     const lines = txt.split('\n').filter(Boolean);
     for (let i = nLines; i < lines.length; i++) {
