@@ -42,6 +42,12 @@ echo "ANTHROPIC_API_KEY=sk-ant-..." > .env   # never committed
 # ambient-documentation mode (organizer dataset):
 ./gauntlet-cli run --encounter covid-inpt          # aliases: covid-inpt, annual-htn, hospice-1/2
 
+# attack any discharge summary against an encounter's grounding record
+# (two test variants, authored during the event, live in assets/variants/):
+./gauntlet-cli run --encounter covid-inpt --summary assets/variants/covid-discharge-poor.md
+# poor variant -> 4 verified findings; corrected variant -> 0 survivors.
+# The mission log also has an "attack your own summary" panel that launches real runs.
+
 # mission-log view (renders the same real event stream the CLI prints):
 .venv/bin/python ui/serve.py                       # http://localhost:3010
 ```
@@ -64,6 +70,22 @@ that shaped it.
 
 All elapsed-time and cost numbers displayed anywhere are real, measured from live API
 usage. Nothing is simulated.
+
+## Evidence integrity
+
+Two different promises, stated exactly:
+
+- **Receipts are guaranteed.** Every quote rendered on a card is mechanically verified
+  verbatim against the source text, in code, after every model stage (including the
+  clustering step, which is the one place quotes could drift). A drifted quote is
+  replaced with the original attacker's verified quote or dropped; a finding with no
+  verifiable receipt cannot render. No model output is trusted for evidence.
+- **Claims are argued, not guaranteed.** The one-sentence claim above the receipts is a
+  model-authored argument about verified evidence. It survives four adversarial tests
+  and (if single-source) a maximum-strictness confirmation gate — but it is reviewed,
+  not proven. That is why every card is attributable (finder agents, lane, full run
+  audit trail in `runs/<dir>/`), why the clinician makes every decision, and why the
+  banner never says "safe."
 
 ## License
 

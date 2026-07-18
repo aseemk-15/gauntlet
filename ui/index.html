@@ -79,6 +79,12 @@
   #chartpane mark { background: #4d3800; color: #ffd97a; padding: 0 2px; }
   #chartpane .x { position: sticky; top: 0; float: right; cursor: pointer;
                   color: var(--dim); font-size: 16px; }
+  select, textarea, button { width: 100%; background: var(--bg); color: var(--txt);
+    border: 1px solid var(--edge); border-radius: 4px; padding: 6px;
+    font: 12px "SF Mono", ui-monospace, monospace; margin-bottom: 6px; }
+  button { cursor: pointer; color: var(--amber); border-color: var(--amber);
+           letter-spacing: 2px; }
+  button:disabled { opacity: .4; }
 </style>
 </head>
 <body>
@@ -101,6 +107,17 @@
     <div id="banner"><div class="big"></div>
       <div class="note">Not a safety certification.</div></div>
     <div id="residual"><div class="big"></div></div>
+    <div class="panel" style="margin-top:12px"><h2>attack your own summary — live run</h2>
+      <select id="enc">
+        <option value="covid-inpt">COVID inpatient admission</option>
+        <option value="annual-htn">General exam — new hypertension</option>
+        <option value="hospice-1">Hospice admission — end-stage colon cancer</option>
+        <option value="hospice-2">Hospice admission — colon cancer + cardiac</option>
+      </select>
+      <textarea id="summary" rows="7" placeholder="Paste a discharge summary for this encounter. Leave empty to attack the encounter's own note/AVS."></textarea>
+      <button id="attackbtn" onclick="launchAttack()">RUN THE GAUNTLET</button>
+      <span id="attackmsg" style="color:var(--dim);font-size:11px"></span>
+    </div>
   </div>
 </div>
 <div id="chartpane"><span class="x" onclick="pane.classList.remove('open')">✕</span
@@ -269,6 +286,21 @@ async function loadFindings() {
     $('cards').innerHTML = '';
     for (const f of fs) { findings[f.id] = f; $('cards').appendChild(card(f)); }
   } catch (err) {}
+}
+
+async function launchAttack() {
+  const btn = $('attackbtn');
+  btn.disabled = true;
+  $('attackmsg').textContent = 'launching real run…';
+  try {
+    const r = await fetch('/api/attack', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ encounter: $('enc').value,
+                             summary: $('summary').value }) });
+    $('attackmsg').textContent = r.ok ?
+      'launched — the mission log will pick it up' : 'launch failed';
+  } catch (err) { $('attackmsg').textContent = 'launch failed: ' + err; }
+  setTimeout(() => { btn.disabled = false; }, 4000);
 }
 
 async function poll() {
