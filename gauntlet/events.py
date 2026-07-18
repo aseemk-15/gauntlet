@@ -46,6 +46,8 @@ class Run:
         with self._lock:
             self.cost += cost
             self.calls += 1
+        # quiet meter event after every real API call — the UI meter reads these
+        self.emit("meter", quiet=True, cost=round(self.cost, 4), calls=self.calls)
 
     def meter(self) -> str:
         return f"{self.elapsed:.1f}s · ${self.cost:.2f} · {self.calls} calls"

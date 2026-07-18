@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>THE GAUNTLET — mission log</title>
+<style>
+  :root {
+    --bg: #0a0e12; --panel: #10161d; --edge: #1e2933; --txt: #c9d6e2;
+    --dim: #5a6b7a; --amber: #e8b23a; --red: #e5484d; --green: #46a758;
+    --cyan: #3fb2c6;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--txt);
+         font: 13px/1.45 "SF Mono", ui-monospace, Menlo, monospace; padding: 14px; }
+  header { display: flex; justify-content: space-between; align-items: baseline;
+           border-bottom: 1px solid var(--edge); padding-bottom: 8px; margin-bottom: 12px; }
+  h1 { font-size: 16px; letter-spacing: 3px; color: #fff; }
+  h1 small { color: var(--dim); letter-spacing: 0; font-weight: normal; margin-left: 10px; }
+  #meter { color: var(--cyan); font-size: 14px; }
+  #phase { color: var(--amber); letter-spacing: 2px; font-size: 12px; margin-bottom: 8px;
+           min-height: 15px; }
+  .cols { display: grid; grid-template-columns: minmax(430px, 1fr) 1.2fr; gap: 14px; }
+  .panel { background: var(--panel); border: 1px solid var(--edge); border-radius: 6px;
+           padding: 10px; }
+  .panel h2 { font-size: 11px; color: var(--dim); letter-spacing: 2px; margin-bottom: 8px;
+              text-transform: uppercase; }
+  /* lane grid */
+  .lane { display: grid; grid-template-columns: 168px repeat(3, 1fr); gap: 4px;
+          margin-bottom: 4px; align-items: stretch; }
+  .lane-name { color: var(--dim); font-size: 11px; align-self: center;
+               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile { border: 1px solid var(--edge); border-radius: 3px; min-height: 26px;
+          padding: 3px 6px; font-size: 10px; color: var(--dim);
+          overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+          transition: all .3s; }
+  .tile.pending  { opacity: .45; }
+  .tile.objection{ border-color: var(--amber); color: var(--amber); }
+  .tile.conceded { opacity: .35; text-decoration: line-through; }
+  .tile.killed   { border-color: #572528; color: #8a5a5c; background: #1a1113;
+                   opacity: .8; }
+  .tile.survivor { border-color: var(--red); color: #fff; background: #3a1518;
+                   box-shadow: 0 0 8px #e5484d55; }
+  /* kill log */
+  #killlog { max-height: 200px; overflow-y: auto; font-size: 11px; }
+  #killlog div { padding: 2px 0; border-bottom: 1px dashed #16202a; }
+  #killlog .t { color: var(--dim); }
+  #killlog .test { color: var(--amber); }
+  /* cards */
+  .card { border: 1px solid var(--red); border-radius: 6px; padding: 10px;
+          margin-bottom: 10px; background: #171114; cursor: pointer; }
+  .card.fixed { border-color: var(--green); background: #101711; }
+  .card.dismissed { border-color: var(--edge); opacity: .6; }
+  .card .tier { font-size: 10px; color: var(--red); letter-spacing: 1px; }
+  .card.fixed .tier { color: var(--green); }
+  .card h3 { font-size: 13px; color: #fff; margin: 3px 0; }
+  .card .badge { display: inline-block; font-size: 10px; color: var(--cyan);
+                 border: 1px solid var(--cyan); border-radius: 8px; padding: 0 7px;
+                 margin: 2px 0; }
+  .card .cite { font-size: 10px; color: var(--dim); }
+  .card .quote { font-size: 11px; color: var(--amber); margin: 4px 0 0 8px; }
+  .card .quote i { color: var(--dim); font-style: normal; }
+  .card .order { font-size: 11px; color: var(--green); margin-top: 5px; }
+  /* orders feed + banner */
+  #orders div { color: var(--green); font-size: 11px; padding: 1px 0; }
+  #orders div.dismissed { color: var(--dim); }
+  #banner { display: none; margin-top: 12px; border: 2px solid var(--green);
+            border-radius: 6px; padding: 14px; text-align: center; }
+  #banner .big { color: var(--green); font-size: 17px; letter-spacing: 1px; }
+  #banner .note { color: var(--dim); font-size: 11px; margin-top: 4px; }
+  #residual { display: none; margin-top: 12px; border: 2px solid var(--red);
+              border-radius: 6px; padding: 12px; }
+  #residual .big { color: var(--red); font-size: 14px; }
+  /* chart side panel */
+  #chartpane { position: fixed; top: 0; right: -52%; width: 50%; height: 100%;
+               background: var(--panel); border-left: 1px solid var(--edge);
+               padding: 16px; overflow-y: auto; transition: right .25s; z-index: 5;
+               white-space: pre-wrap; font-size: 11.5px; }
+  #chartpane.open { right: 0; }
+  #chartpane mark { background: #4d3800; color: #ffd97a; padding: 0 2px; }
+  #chartpane .x { position: sticky; top: 0; float: right; cursor: pointer;
+                  color: var(--dim); font-size: 16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>THE GAUNTLET <small id="runid">waiting for a run…</small></h1>
+  <div id="meter">—</div>
+</header>
+<div id="phase"></div>
+<div class="cols">
+  <div>
+    <div class="panel"><h2>attack lanes</h2><div id="grid"></div></div>
+    <div class="panel" style="margin-top:12px"><h2>kill log — died in review</h2>
+      <div id="killlog"></div></div>
+  </div>
+  <div>
+    <div class="panel"><h2>surviving objections — receipts attached</h2>
+      <div id="cards"><span style="color:var(--dim)">none yet</span></div></div>
+    <div class="panel" style="margin-top:12px"><h2>clinician decisions → orders</h2>
+      <div id="orders"><span style="color:var(--dim)">—</span></div></div>
+    <div id="banner"><div class="big"></div>
+      <div class="note">Not a safety certification.</div></div>
+    <div id="residual"><div class="big"></div></div>
+  </div>
+</div>
+<div id="chartpane"><span class="x" onclick="pane.classList.remove('open')">✕</span
+  ><div id="charttext"></div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pane = $('chartpane');
+let runDir = new URLSearchParams(location.search).get('run');
+let nLines = 0, tiles = {}, findings = {}, meta = null, attackTotal = 0;
+let fixedIds = new Set(), dismissedIds = new Set();
+
+const norm = s => s.replace(/[—–−]/g, '-').replace(/[‘’]/g, "'")
+                   .replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
+
+async function latest() {
+  if (runDir) return runDir;
+  const r = await fetch('/api/latest').then(r => r.json()).catch(() => null);
+  return r && r.run;
+}
+
+function tile(agent, lane) {
+  if (tiles[agent]) return tiles[agent];
+  let laneRow = document.querySelector(`[data-lane="${lane}"]`);
+  if (!laneRow) {
+    laneRow = document.createElement('div');
+    laneRow.className = 'lane'; laneRow.dataset.lane = lane;
+    laneRow.innerHTML = `<div class="lane-name">${lane}</div>`;
+    $('grid').appendChild(laneRow);
+  }
+  const t = document.createElement('div');
+  t.className = 'tile pending'; t.textContent = agent.split('#')[1] ? '#' + agent.split('#')[1] : agent;
+  laneRow.appendChild(t);
+  tiles[agent] = t;
+  return t;
+}
+
+function setTile(agent, lane, cls, txt) {
+  const t = tile(agent, lane);
+  t.className = 'tile ' + cls;
+  if (txt) { t.textContent = txt; t.title = txt; }
+}
+
+function killRow(e) {
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="t">${e.agent}</span> — failed <span class="test">` +
+    `${e.test}</span>: ${(e.why || '').slice(0, 110)}`;
+  $('killlog').prepend(d);
+}
+
+async function showReceipts(f) {
+  const src = (meta && meta.chart) || 'assets/chart-eleanor-vance.md';
+  const txt = await fetch('/' + src).then(r => r.text());
+  const stripped = txt.replace(/<!--[\s\S]*?-->/g, '');
+  let html = stripped.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  for (const q of (f.quotes || [])) {
+    for (const frag of (q.quote || '').split('...')) {
+      const f2 = frag.trim(); if (f2.length < 6) continue;
+      // find the fragment tolerant of dash variants by scanning normalized text
+      const idx = norm(html.toLowerCase()).indexOf(norm(f2.toLowerCase()));
+      const esc = f2.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                    .replace(/[—–−-]/g, '[—–−-]').replace(/\s+/g, '\\s+');
+      try { html = html.replace(new RegExp(esc, 'i'), m => `<mark>${m}</mark>`); }
+      catch (err) {}
+    }
+  }
+  $('charttext').innerHTML = html;
+  pane.classList.add('open');
+  const m = pane.querySelector('mark');
+  if (m) m.scrollIntoView({ block: 'center' });
+}
+
+function card(f) {
+  const el = document.createElement('div');
+  el.className = 'card' + (fixedIds.has(f.id) ? ' fixed' : '')
+                        + (dismissedIds.has(f.id) ? ' dismissed' : '');
+  el.id = 'card-' + f.id;
+  const single = f.found_by === 1 ? ' · SINGLE-SOURCE' : '';
+  el.innerHTML =
+    `<div class="tier">${f.tier_label || ''}</div>` +
+    `<h3>${f.title}</h3>` +
+    `<span class="badge">found independently by ${f.found_by} of ${attackTotal || 30}${single}</span>` +
+    `<div class="cite">${f.citation || ''}</div>` +
+    (f.quotes || []).slice(0, 3).map(q =>
+      `<div class="quote"><i>[${q.section}]</i> “${(q.quote || '').slice(0, 110)}”</div>`).join('') +
+    `<div class="order">▸ ${f.proposed_order || ''}</div>`;
+  el.onclick = () => showReceipts(f);
+  return el;
+}
+
+function handle(e) {
+  switch (e.type) {
+    case 'attack_begin':
+      if (!attackTotal) attackTotal = e.agents;  // keep the initial swarm size for badges
+      $('grid').innerHTML = ''; tiles = {};
+      $('phase').textContent = e.reverify ? '' : `ATTACK — ${e.agents} agents · ${e.lanes} lanes`;
+      break;
+    case 'reverify_begin':
+      $('phase').textContent = `TARGETED RE-VERIFICATION — lanes: ${e.targets}`;
+      $('grid').innerHTML = ''; tiles = {}; $('killlog').innerHTML = '';
+      break;
+    case 'attacker_start': tile(e.agent, e.lane); break;
+    case 'objection': setTile(e.agent, e.lane, 'objection', '⚔ ' + (e.claim || '')); break;
+    case 'no_objection': setTile(e.agent, e.lane, 'conceded', 'conceded'); break;
+    case 'judge_begin': $('phase').textContent = `JUDGE — ${e.objections} objections · four tests · default kill`; break;
+    case 'gate_begin': $('phase').textContent = `CONFIRMATION GATE — ${e.candidates} candidate(s) · max strictness`; break;
+    case 'killed':
+      setTile(e.agent, e.lane, 'killed', '✕ ' + (e.test || ''));
+      killRow(e); break;
+    case 'survivor':
+      setTile(e.agent, e.lane, 'survivor', '■ SURVIVED');
+      break;
+    case 'finding': break; // cards come from findings.json for full receipts
+    case 'cluster_done':
+      $('phase').textContent = `${e.findings} DISTINCT FINDINGS`; loadFindings(); break;
+    case 'meter': {
+      const last = e; $('meter').textContent =
+        `${(e.t).toFixed(1)}s · $${e.cost.toFixed(2)} · ${e.calls} calls — real, measured`;
+      break; }
+    case 'order_emitted': {
+      if ($('orders').firstChild && $('orders').firstChild.tagName === 'SPAN')
+        $('orders').innerHTML = '';
+      const d = document.createElement('div');
+      d.textContent = `✓ ${e.order} — order transmitted`;
+      $('orders').appendChild(d);
+      fixedIds.add(e.finding);
+      const c = $('card-' + e.finding); if (c) c.classList.add('fixed');
+      break; }
+    case 'dismissed': {
+      if ($('orders').firstChild && $('orders').firstChild.tagName === 'SPAN')
+        $('orders').innerHTML = '';
+      const d = document.createElement('div'); d.className = 'dismissed';
+      d.textContent = `✗ ${e.finding} dismissed — ${e.rationale}`;
+      $('orders').appendChild(d);
+      dismissedIds.add(e.finding);
+      const c = $('card-' + e.finding); if (c) c.classList.add('dismissed');
+      break; }
+    case 'amendment_written':
+      $('phase').textContent = `AMENDMENT WRITTEN — supersedes ${e.supersedes} · ${e.orders} orders`;
+      if (meta) meta.chart = runDir + '/amended-chart.md';
+      break;
+    case 'banner':
+      $('banner').style.display = 'block';
+      $('banner').querySelector('.big').textContent = e.text;
+      $('phase').textContent = '';
+      break;
+    case 'residual_gaps':
+      $('residual').style.display = 'block';
+      $('residual').querySelector('.big').textContent =
+        `${e.count} objection(s) survived the gate — the fix was incomplete. ` +
+        `That is the product working.`;
+      break;
+  }
+}
+
+async function loadFindings() {
+  try {
+    const fs = await fetch('/' + runDir + '/findings.json').then(r => r.json());
+    $('cards').innerHTML = '';
+    for (const f of fs) { findings[f.id] = f; $('cards').appendChild(card(f)); }
+  } catch (err) {}
+}
+
+async function poll() {
+  const rd = await latest();
+  if (rd) {
+    if (rd !== runDir) {  // new run appeared — reset everything
+      runDir = rd; nLines = 0; tiles = {}; findings = {}; attackTotal = 0;
+      fixedIds = new Set(); dismissedIds = new Set();
+      $('grid').innerHTML = ''; $('killlog').innerHTML = '';
+      $('cards').innerHTML = '<span style="color:var(--dim)">none yet</span>';
+      $('orders').innerHTML = '<span style="color:var(--dim)">—</span>';
+      $('banner').style.display = 'none'; $('residual').style.display = 'none';
+      $('runid').textContent = rd.replace('runs/', '');
+      meta = null;
+    }
+    if (!meta) meta = await fetch('/' + runDir + '/meta.json').then(r => r.json()).catch(() => null);
+    const txt = await fetch('/' + runDir + '/events.jsonl').then(r => r.text()).catch(() => '');
+    const lines = txt.split('\n').filter(Boolean);
+    for (let i = nLines; i < lines.length; i++) {
+      try { handle(JSON.parse(lines[i])); } catch (err) {}
+    }
+    nLines = lines.length;
+  }
+  setTimeout(poll, 400);
+}
+poll();
+</script>
+</body>
+</html>
