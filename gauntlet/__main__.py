@@ -6,6 +6,7 @@ import sys
 from .attack import fan_out
 from .chart import load_chart
 from .events import Run
+from .judge import cluster, judge_all
 from .lanes import AGENTS_PER_LANE, DISCHARGE_LANES
 
 
@@ -33,8 +34,17 @@ def main(argv=None):
         run = Run("eleanor" + ("-amended" if args.amended else ""))
         results = fan_out(run, chart.text, DISCHARGE_LANES, AGENTS_PER_LANE)
         (run.dir / "attack.json").write_text(json.dumps(results, indent=2))
-        print(f"\nraw objections: {sum(1 for r in results if r.get('objection'))}"
-              f"/{len(results)}  ({run.meter()})")
+        objections = [r for r in results if r.get("objection")]
+        verdicts = judge_all(run, chart, objections)
+        survivors = [v for v in verdicts if v["verdict"] == "survive"]
+        findings = cluster(run, survivors)
+        (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
+        (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
+        print(f"\n{len(objections)} attacks → {len(survivors)} survived review → "
+              f"{len(findings)} distinct findings  ({run.meter()})")
+        for f in findings:
+            print(f"  [{f['id']}] {f['title']}  — found by {f['found_by']} of "
+                  f"{len(results)}")
         print(f"artifacts: {run.dir}")
         return 0
     return 0

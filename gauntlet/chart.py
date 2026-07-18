@@ -25,10 +25,15 @@ class Chart:
         return "\n".join(lines)
 
     def contains_verbatim(self, quote: str) -> bool:
-        """Whitespace-tolerant verbatim check used by the judge's evidence test."""
-        norm = re.sub(r"\s+", " ", quote).strip().lower()
-        hay = re.sub(r"\s+", " ", self.text).lower()
-        return norm in hay
+        """Verbatim check tolerant of whitespace and dash/quote glyph variants only."""
+        return _norm(quote) in _norm(self.text)
+
+
+def _norm(s: str) -> str:
+    s = s.translate(str.maketrans({"—": "-", "–": "-", "−": "-",
+                                   "‘": "'", "’": "'",
+                                   "“": '"', "”": '"'}))
+    return re.sub(r"\s+", " ", s).strip().lower()
 
 
 def load_chart(path: str | Path) -> Chart:
