@@ -6,8 +6,10 @@ import sys
 from .attack import fan_out
 from .chart import load_chart
 from .events import Run
+from .fixloop import apply_fixes, render_card
 from .judge import cluster, judge_all
 from .lanes import AGENTS_PER_LANE, DISCHARGE_LANES
+from .severity import classify
 
 
 def main(argv=None):
@@ -18,7 +20,14 @@ def main(argv=None):
     run.add_argument("--encounter", help="encounter id from assets/abridge-dataset")
     run.add_argument("--amended", action="store_true", help="attack the amended plan")
     run.add_argument("--summary-only", action="store_true", help="print chart summary and exit")
+    fix = sub.add_parser("fix", help="clinician decisions -> order artifacts + amendment")
+    fix.add_argument("run_dir", help="runs/<dir> containing findings.json")
+    fix.add_argument("--dismiss", action="append", default=[],
+                     metavar="ID[:RATIONALE]", help="dismiss a finding instead of fixing")
     args = p.parse_args(argv)
+
+    if args.cmd == "fix":
+        return do_fix(args)
 
     if args.cmd == "run":
         if args.encounter:
@@ -37,16 +46,37 @@ def main(argv=None):
         objections = [r for r in results if r.get("objection")]
         verdicts = judge_all(run, chart, objections)
         survivors = [v for v in verdicts if v["verdict"] == "survive"]
-        findings = cluster(run, survivors)
+        findings = [classify(f) for f in cluster(run, survivors)]
         (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
         (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
+        (run.dir / "meta.json").write_text(json.dumps({"chart": str(args.chart)}))
         print(f"\n{len(objections)} attacks → {len(survivors)} survived review → "
-              f"{len(findings)} distinct findings  ({run.meter()})")
+              f"{len(findings)} distinct findings  ({run.meter()})\n")
         for f in findings:
-            print(f"  [{f['id']}] {f['title']}  — found by {f['found_by']} of "
-                  f"{len(results)}")
+            print(render_card(f))
         print(f"artifacts: {run.dir}")
         return 0
+    return 0
+
+
+def do_fix(args):
+    from pathlib import Path
+    rd = Path(args.run_dir)
+    findings = json.loads((rd / "findings.json").read_text())
+    meta = json.loads((rd / "meta.json").read_text())
+    chart = load_chart(meta["chart"])
+    decisions = {}
+    for d in args.dismiss:
+        fid, _, why = d.partition(":")
+        decisions[fid] = f"dismiss:{why or 'clinician judgment'}"
+    run = Run("fix", dir_=rd)
+    run.emit("fix_begin", findings=len(findings))
+    manifest = apply_fixes(run, chart, findings, decisions)
+    for o in manifest["orders"]:
+        print(f"  ✓ {o['order']}  — order transmitted")
+    for d in manifest["dismissed"]:
+        print(f"  ✗ {d['finding']} dismissed: {d['rationale']}")
+    print(f"\namended chart (supersedes med list): {manifest['amended_chart']}")
     return 0
 
 

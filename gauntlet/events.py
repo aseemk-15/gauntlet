@@ -11,10 +11,10 @@ from .config import PRICES, ROOT
 
 
 class Run:
-    def __init__(self, tag: str):
+    def __init__(self, tag: str, dir_: Path | None = None):
         self.t0 = time.monotonic()
         stamp = time.strftime("%Y%m%d-%H%M%S")
-        self.dir = ROOT / "runs" / f"{stamp}-{tag}"
+        self.dir = Path(dir_) if dir_ else ROOT / "runs" / f"{stamp}-{tag}"
         self.dir.mkdir(parents=True, exist_ok=True)
         self._f = open(self.dir / "events.jsonl", "a")
         self._lock = threading.Lock()
