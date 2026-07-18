@@ -70,8 +70,12 @@
   .dismiss{background:#fff;color:var(--mut)}
   .dismiss:hover{border-color:var(--mut)}
   button:disabled{opacity:.45;cursor:default}
-  .rat{display:none;flex:1;min-width:240px}
-  .rat input{width:100%;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);
+  .rat{display:none;flex:1;min-width:260px}
+  .rat .chip{font:600 11.5px -apple-system,sans-serif;background:#fff;
+             color:var(--mut);border:1px solid var(--line);border-radius:12px;
+             padding:4px 11px;margin:0 4px 6px 0}
+  .rat .chip:hover{border-color:var(--mut);color:var(--ink)}
+  .rat input{width:100%;font-size:13px;padding:7px 10px;border:1px solid var(--line);
              border-radius:6px}
   .decided{font-size:13.5px;font-weight:600}
   .decided.ok{color:var(--grn)} .decided.no{color:var(--mut)}
@@ -192,28 +196,37 @@ function card(f) {
     `</details>` +
     `<div class="order"><span class="lbl">STAGED ORDER</span>${f.proposed_order || ''}</div>` +
     `<div class="actions">` +
-    `<button class="accept">Accept — place order</button>` +
+    `<button class="accept">Accept — stage order</button>` +
     `<button class="dismiss">Dismiss…</button>` +
-    `<span class="rat"><input placeholder="Rationale (required) — recorded in the chart audit trail"></span>` +
+    `<span class="rat">` +
+    `<button class="chip" data-r="clinically addressed">clinically addressed</button>` +
+    `<button class="chip" data-r="known to me — monitoring in place">known — monitored</button>` +
+    `<button class="chip" data-r="disagree with the evidence">disagree w/ evidence</button>` +
+    `<input placeholder="…or type a rationale, Enter to record"></span>` +
     `</div>`;
   const actions = el.querySelector('.actions');
   const rat = el.querySelector('.rat'), inp = rat.querySelector('input');
+  const dismissWith = why => {
+    if (sawFixEvents || fixSubmitted) return;
+    decisions[f.id] = 'dismiss:' + why;
+    el.classList.add('dismissedc');
+    actions.innerHTML = `<span class="decided no">✗ Dismissed — “${why}” (recorded in the run's audit trail)</span>`;
+    maybeSubmit();
+  };
   el.querySelector('.accept').onclick = () => {
     if (sawFixEvents || fixSubmitted) return;
     decisions[f.id] = 'fix';
     el.classList.add('accepted');
-    actions.innerHTML = '<span class="decided ok">✓ Accepted — order will transmit when review decisions are complete</span>';
+    actions.innerHTML = '<span class="decided ok">✓ Accepted — order staged; transmits when review decisions are complete</span>';
     maybeSubmit();
   };
   el.querySelector('.dismiss').onclick = () => {
     rat.style.display = 'block'; inp.focus();
   };
+  rat.querySelectorAll('.chip').forEach(c =>
+    c.onclick = () => dismissWith(c.dataset.r));
   inp.onkeydown = e => {
-    if (e.key !== 'Enter' || !inp.value.trim() || sawFixEvents || fixSubmitted) return;
-    decisions[f.id] = 'dismiss:' + inp.value.trim();
-    el.classList.add('dismissedc');
-    actions.innerHTML = `<span class="decided no">✗ Dismissed — “${inp.value.trim()}” (recorded)</span>`;
-    maybeSubmit();
+    if (e.key === 'Enter' && inp.value.trim()) dismissWith(inp.value.trim());
   };
   return el;
 }
