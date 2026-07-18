@@ -55,7 +55,8 @@ def main(argv=None):
         (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
         (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
         (run.dir / "meta.json").write_text(json.dumps({"chart": str(args.chart)}))
-        print(f"\n{len(objections)} attacks → {len(survivors)} survived review → "
+        print(f"\n{len(results)} attacks ({len(objections)} objections) → "
+              f"{len(survivors)} survived review → "
               f"{len(findings)} distinct findings  ({run.meter()})\n")
         for f in findings:
             print(render_card(f))
@@ -84,7 +85,8 @@ def do_ambient(key: str):
                               [classify(f) for f in cluster(run, survivors)])
     (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
     (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
-    print(f"\n{len(objections)} attacks → {len(survivors)} survived review → "
+    print(f"\n{len(results)} attacks ({len(objections)} objections) → "
+          f"{len(survivors)} survived review → "
           f"{len(findings)} distinct findings  ({run.meter()})\n")
     from .fixloop import render_card
     for f in findings:

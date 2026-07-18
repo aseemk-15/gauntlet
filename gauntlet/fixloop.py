@@ -63,6 +63,14 @@ follow-up plan are VOID and replaced in full below.
   diuresis strategy per cardiology recommendation; cardiology appointment moved up to
   07/24.
 
+### Follow-up appointments — ALL SCHEDULED BEFORE DISCHARGE (booking documented)
+- 07/18 home health RN visit (agency confirmed).
+- 07/21 telehealth visit with Dr. Patel's clinic for diuretic reassessment and BMP
+  review — BOOKED by discharge coordinator 07/16; date/time confirmed at bedside with
+  patient and daughter; instructions given. Owner: Dr. Patel.
+- 07/24 cardiology (Dr. Kim; moved up from 09/2026); daughter confirmed transport.
+- PCP visit scheduled 07/28 by discharge coordinator (replaces "patient to schedule").
+
 ### Pending results (owner: Dr. Patel)
 - Blood cultures x2 drawn 07/14 (no growth to date, day 2) remain pending at discharge.
   Named result owner: Dr. Patel. Routing order placed: micro pages hospitalist on any
