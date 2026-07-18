@@ -19,6 +19,8 @@ def main(argv=None):
     run = sub.add_parser("run", help="run the gauntlet against a chart or encounter")
     run.add_argument("chart", nargs="?", help="path to a markdown chart")
     run.add_argument("--encounter", help="encounter id from assets/abridge-dataset")
+    run.add_argument("--summary", help="path to a discharge summary to attack against "
+                                       "the encounter's grounding record")
     run.add_argument("--amended", action="store_true", help="attack the amended plan")
     run.add_argument("--summary-only", action="store_true", help="print chart summary and exit")
     fix = sub.add_parser("fix", help="clinician decisions -> order artifacts + amendment")
@@ -37,7 +39,7 @@ def main(argv=None):
 
     if args.cmd == "run":
         if args.encounter:
-            return do_ambient(args.encounter)
+            return do_ambient(args.encounter, args.summary)
         if not args.chart:
             p.error("need a chart path or --encounter")
         chart = load_chart(args.chart)
@@ -69,21 +71,31 @@ def main(argv=None):
     return 0
 
 
-def do_ambient(key: str):
+def do_ambient(key: str, summary_path: str | None = None):
+    from pathlib import Path
     from .ambient import (AMBIENT_ATTACKER_ROLE, AMBIENT_JUDGE_NOTE, AMBIENT_LANES,
-                          load_encounter)
-    chart, meta = load_encounter(key)
-    run = Run(f"ambient-{key}")
+                          SUMMARY_ATTACKER_ROLE, SUMMARY_JUDGE_NOTE, SUMMARY_LANES,
+                          compose_with_summary, load_encounter)
+    if summary_path:
+        chart, meta = compose_with_summary(key, Path(summary_path).read_text())
+        role, lanes, note = SUMMARY_ATTACKER_ROLE, SUMMARY_LANES, SUMMARY_JUDGE_NOTE
+        tag = f"summary-{key}"
+    else:
+        chart, meta = load_encounter(key)
+        role, lanes, note = AMBIENT_ATTACKER_ROLE, AMBIENT_LANES, AMBIENT_JUDGE_NOTE
+        tag = f"ambient-{key}"
+    run = Run(tag)
     (run.dir / "ambient-chart.md").write_text(chart.text)
     (run.dir / "meta.json").write_text(json.dumps(
         {"chart": f"runs/{run.dir.name}/ambient-chart.md",
-         "encounter": meta.get("visit_title")}))
-    print(f"encounter: {meta.get('visit_title')}")
-    results = fan_out(run, chart.text, AMBIENT_LANES, per_lane=2,
-                      role=AMBIENT_ATTACKER_ROLE)
+         "encounter": meta.get("visit_title"),
+         "summary": summary_path}))
+    print(f"encounter: {meta.get('visit_title')}"
+          + (f"  ·  attacking submitted summary: {summary_path}" if summary_path else ""))
+    results = fan_out(run, chart.text, lanes, per_lane=2, role=role)
     (run.dir / "attack.json").write_text(json.dumps(results, indent=2))
     objections = [r for r in results if r.get("objection")]
-    verdicts = judge_all(run, chart, objections, strict_note=AMBIENT_JUDGE_NOTE)
+    verdicts = judge_all(run, chart, objections, strict_note=note)
     survivors = [v for v in verdicts if v["verdict"] == "survive"]
     findings = enforce_receipts(
         run, chart,
