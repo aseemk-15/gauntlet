@@ -24,10 +24,15 @@ def main(argv=None):
     fix.add_argument("run_dir", help="runs/<dir> containing findings.json")
     fix.add_argument("--dismiss", action="append", default=[],
                      metavar="ID[:RATIONALE]", help="dismiss a finding instead of fixing")
+    rv = sub.add_parser("reverify", help="re-attack only the fixed lanes vs amended chart")
+    rv.add_argument("run_dir", help="runs/<dir> that has been through `fix`")
     args = p.parse_args(argv)
 
     if args.cmd == "fix":
         return do_fix(args)
+    if args.cmd == "reverify":
+        from .reverify import reverify
+        return reverify(args.run_dir)
 
     if args.cmd == "run":
         if args.encounter:
