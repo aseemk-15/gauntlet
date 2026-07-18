@@ -43,6 +43,12 @@ def classify(finding: dict) -> dict:
         if any(n in blob for n in names):
             return finding | {"tier": 1, "tier_label": TIERS[1],
                               "citation": f"ISMP high-alert medications (acute care): {cls}"}
+    if any(w in blob for w in ("mismatch", "discrepan", "contradict", "hallucinat",
+                               "not in transcript", "grounding", "drift",
+                               "unaddressed", "not addressed", "never addressed")):
+        return finding | {"tier": 2, "tier_label": TIERS[2],
+                          "citation": "Documentation contradicts its grounding source "
+                                      "(ambient note-error class)"}
     if any(w in blob for w in ("pending", "culture", "no owner", "ownership",
                                "routing", "result")):
         return finding | {"tier": 2, "tier_label": TIERS[2],

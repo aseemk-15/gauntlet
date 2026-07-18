@@ -36,8 +36,7 @@ def main(argv=None):
 
     if args.cmd == "run":
         if args.encounter:
-            print("ambient mode: not built yet", file=sys.stderr)
-            return 2
+            return do_ambient(args.encounter)
         if not args.chart:
             p.error("need a chart path or --encounter")
         chart = load_chart(args.chart)
@@ -61,6 +60,34 @@ def main(argv=None):
             print(render_card(f))
         print(f"artifacts: {run.dir}")
         return 0
+    return 0
+
+
+def do_ambient(key: str):
+    from .ambient import (AMBIENT_ATTACKER_ROLE, AMBIENT_JUDGE_NOTE, AMBIENT_LANES,
+                          load_encounter)
+    chart, meta = load_encounter(key)
+    run = Run(f"ambient-{key}")
+    (run.dir / "ambient-chart.md").write_text(chart.text)
+    (run.dir / "meta.json").write_text(json.dumps(
+        {"chart": f"runs/{run.dir.name}/ambient-chart.md",
+         "encounter": meta.get("visit_title")}))
+    print(f"encounter: {meta.get('visit_title')}")
+    results = fan_out(run, chart.text, AMBIENT_LANES, per_lane=2,
+                      role=AMBIENT_ATTACKER_ROLE)
+    (run.dir / "attack.json").write_text(json.dumps(results, indent=2))
+    objections = [r for r in results if r.get("objection")]
+    verdicts = judge_all(run, chart, objections, strict_note=AMBIENT_JUDGE_NOTE)
+    survivors = [v for v in verdicts if v["verdict"] == "survive"]
+    findings = [classify(f) for f in cluster(run, survivors)]
+    (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
+    (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
+    print(f"\n{len(objections)} attacks → {len(survivors)} survived review → "
+          f"{len(findings)} distinct findings  ({run.meter()})\n")
+    from .fixloop import render_card
+    for f in findings:
+        print(render_card(f, total=len(results)))
+    print(f"artifacts: {run.dir}")
     return 0
 
 

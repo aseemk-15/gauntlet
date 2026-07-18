@@ -92,7 +92,9 @@ safety-unaddressed. Receipts are source-attributed across transcript / note / AV
 ## Models
 
 Attackers: Haiku-class, temperature 1, max_tokens ≥ 900, retry-once on parse failure.
-Judge / dedup / confirmation gate: frontier model, temperature 0. The shared chart prefix
+Judge / dedup / confirmation gate: frontier model (Opus 4.8 rejects the temperature
+parameter outright; judge determinism rides on the strict rubric plus the mechanical
+verbatim pre-check, and held 2-for-2 on the acceptance fixture). The shared chart prefix
 is cached (`cache_control` on the system block) — that is what makes 30 concurrent agents
 cheap (~$0.40-0.65 and ~45-65s per full run, measured).
 

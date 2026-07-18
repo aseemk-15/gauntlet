@@ -93,9 +93,14 @@ def judge_objection(run, chart, obj: dict, strict_note: str = "") -> dict:
 def judge_all(run, chart, objections: list[dict], strict_note: str = "") -> list[dict]:
     run.emit("judge_begin", objections=len(objections))
     verdicts = []
+    if not objections:
+        run.emit("judge_done", survivors=0, killed=0, meter=run.meter())
+        return verdicts
+    # First verdict runs alone to prime the judge's chart-prefix cache.
+    verdicts.append(judge_objection(run, chart, objections[0], strict_note))
     with ThreadPoolExecutor(max_workers=8) as pool:
         futs = [pool.submit(judge_objection, run, chart, o, strict_note)
-                for o in objections]
+                for o in objections[1:]]
         for fut in as_completed(futs):
             verdicts.append(fut.result())
     survivors = [v for v in verdicts if v["verdict"] == "survive"]

@@ -80,11 +80,11 @@ def match_fix(finding: dict) -> str | None:
     return None
 
 
-def render_card(f: dict, width: int = 78) -> str:
+def render_card(f: dict, total: int = 30, width: int = 78) -> str:
     bar = "─" * width
     lines = [bar,
              f"█ {f.get('tier_label', '?')}  ·  {f['title']}",
-             f"  found independently by {f.get('found_by', '?')} of 30"
+             f"  found independently by {f.get('found_by', '?')} of {total}"
              + ("  ·  SINGLE-SOURCE" if f.get("found_by") == 1 else ""),
              f"  cite: {f.get('citation', '')}",
              f"  CLAIM   {f.get('claim', '')}",
