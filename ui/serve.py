@@ -27,10 +27,13 @@ class Handler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
-        if self.path == "/":
+        route = self.path.split("?")[0]
+        if route == "/":
             self.path = "/ui/index.html"
-        elif self.path.split("?")[0] == "/md":
+        elif route == "/md":
             self.path = "/ui/md.html"
+        elif route == "/classic":
+            self.path = "/ui/classic.html"
         super().do_GET()
 
     def _spawn(self, cmd, stamp):

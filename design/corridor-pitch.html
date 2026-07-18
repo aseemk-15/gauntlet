@@ -1,0 +1,470 @@
+<title>The Gauntlet — design direction 02.1 · The Corridor</title>
+<style>
+  :root{
+    --room:#10151B; --panel:#1A222C; --line:#263140; --label:#7A93AD;
+    --paper:#F4EFE4; --paper2:#EDE6D6; --ink:#232019; --faint:#8A8474;
+    --pen:#C43B2E; --amber:#D99A2B; --grn:#2E7D4F;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --serif:Charter,Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0}
+  html{background:var(--room)}
+  body{background:var(--room);color:#C8D2DC;font:15px/1.5 var(--sans)}
+  .wrap{max-width:1200px;margin:0 auto;padding:26px 26px 70px}
+  .studio{font:11px var(--mono);letter-spacing:.22em;color:var(--label);
+          text-transform:uppercase;margin-bottom:8px}
+  h1{font:700 30px/1.15 var(--serif);color:#EFE9DC;text-wrap:balance}
+  h1 em{color:var(--pen);font-style:normal}
+  .lede{font:16px/1.6 var(--serif);color:#9FACB9;max-width:64ch;margin:12px 0 30px}
+
+  /* ===== the corridor hero ===== */
+  .stage{border:1px solid var(--line);border-radius:6px;background:var(--panel);
+         padding:18px;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative}
+  .stagehead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  .stamp{font:700 11px var(--sans);letter-spacing:.2em;color:var(--room);
+         background:#EFE9DC;padding:4px 10px;border-radius:2px}
+  .runmeta{font:11.5px var(--mono);color:var(--label)}
+  .replaybtn{margin-left:auto;font:700 12px var(--mono);letter-spacing:.14em;
+             color:var(--pen);background:transparent;border:1px solid var(--pen);
+             border-radius:3px;padding:8px 16px;cursor:pointer}
+  .replaybtn:hover{background:rgba(196,59,46,.1)}
+  .replaybtn:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+  .corridor{display:grid;grid-template-columns:236px 128px 1fr;gap:0;position:relative}
+  @media(max-width:920px){.corridor{grid-template-columns:1fr}.gate{border-left:0!important;border-right:0!important;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}}
+  /* swarm field */
+  .field{padding-right:16px}
+  .fieldhead{font:11px var(--mono);letter-spacing:.18em;color:var(--label);
+             text-transform:uppercase;margin-bottom:10px}
+  .flane{display:grid;grid-template-columns:1fr 54px;align-items:center;gap:8px;
+         padding:4.5px 0;border-bottom:1px solid #1E2833}
+  .flane .nm{font:10px var(--sans);letter-spacing:.07em;color:#8FA1B2;
+             text-transform:uppercase;white-space:nowrap;overflow:hidden;
+             text-overflow:ellipsis}
+  .agents{display:flex;gap:4px;justify-content:flex-end}
+  .agent{width:13px;height:13px;border-radius:50%;background:#232E3A;
+         border:1px solid #2C3947;transition:all .3s}
+  .agent.live{background:#3D4F61;border-color:var(--label);
+              box-shadow:0 0 6px rgba(122,147,173,.5)}
+  .agent.dead{background:#1B242E;border-color:transparent;opacity:.45}
+  .agent.surv{background:var(--pen);border-color:var(--pen);
+              box-shadow:0 0 8px rgba(196,59,46,.6)}
+  /* judge gate */
+  .gate{border-left:1px dashed #33455A;border-right:1px dashed #33455A;
+        padding:0 10px;display:flex;flex-direction:column}
+  .gatehead{font:11px var(--mono);letter-spacing:.18em;color:var(--label);
+            text-transform:uppercase;margin-bottom:6px;text-align:center}
+  .gatehead b{display:block;font:700 10px var(--sans);letter-spacing:.1em;
+              color:#5F7183;margin-top:2px}
+  .gateledger{flex:1;overflow:hidden;font:9.5px/1.5 var(--mono);color:#5F7183}
+  .gateledger div{padding:2.5px 0;border-bottom:1px dotted #223041;opacity:0;
+                  transition:opacity .4s}
+  .gateledger div.in{opacity:1}
+  .gateledger .test{color:var(--amber)}
+  .gatecount{font:700 20px var(--mono);color:#8FA1B2;text-align:center;
+             padding:8px 0 2px;font-variant-numeric:tabular-nums}
+  .gatecount small{display:block;font:9px var(--sans);letter-spacing:.14em;
+                   color:#5F7183;text-transform:uppercase}
+  /* document */
+  .doc{background:var(--paper);color:var(--ink);border-radius:0 3px 3px 0;
+       padding:20px 22px;font:12px/1.7 var(--mono);
+       box-shadow:0 0 0 1px #D8CFBB inset,0 0 60px rgba(244,239,228,.13)}
+  .doc .docmeta{font-size:10px;color:var(--faint);letter-spacing:.08em;
+                border-bottom:1px solid #D8CFBB;padding-bottom:7px;margin-bottom:10px}
+  .doc h4{font:700 10.5px var(--sans);letter-spacing:.16em;color:var(--faint);
+          margin:12px 0 3px}
+  .ln{padding:1px 2px;border-radius:2px;transition:background .25s}
+  .mark{border-bottom:2px solid transparent;transition:all .3s}
+  .mark.inked{border-bottom-color:var(--pen);background:rgba(196,59,46,.09)}
+  .exlab{display:none;font:700 9.5px var(--sans);color:var(--paper);
+         background:var(--pen);border-radius:50%;width:15px;height:15px;
+         line-height:15px;text-align:center;position:relative;top:-6px;left:2px}
+  .mark.inked .exlab{display:inline-block}
+  .strike{transition:all .3s}
+  .strike.dead{text-decoration:line-through;text-decoration-color:#B9AE93;color:var(--faint)}
+  /* streaks */
+  .streak{position:absolute;width:22px;height:2px;background:var(--label);
+          border-radius:1px;pointer-events:none;z-index:4;opacity:.9}
+  .streak.red{background:var(--pen);height:2.5px;box-shadow:0 0 6px rgba(196,59,46,.7)}
+  /* verdict row */
+  .verdictrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+              gap:12px;margin-top:16px}
+  .ex{background:var(--paper);color:var(--ink);border-radius:3px;padding:13px 15px;
+      border-left:4px solid var(--pen);opacity:0;transform:translateY(10px);
+      transition:opacity .5s,transform .5s}
+  .ex.in{opacity:1;transform:none}
+  .ex .tag{display:flex;align-items:baseline;gap:8px}
+  .ex .let{font:700 12px var(--sans);color:var(--paper);background:var(--pen);
+           border-radius:50%;width:20px;height:20px;line-height:20px;text-align:center;flex:none}
+  .ex .sev{font:700 10px var(--sans);letter-spacing:.14em;color:var(--pen)}
+  .ex .sev.hi{color:var(--amber)}
+  .ex h3{font:700 14.5px/1.3 var(--serif);margin:6px 0 4px;text-wrap:balance}
+  .ex .verdict{font:12.5px/1.5 var(--serif);color:#4A4438}
+  .ex .receipt{font:10.5px/1.5 var(--mono);color:#5C5546;background:var(--paper2);
+               border-left:2px solid #C9BFA6;padding:4px 8px;margin-top:7px}
+  .ex .receipt b{color:var(--pen);font-weight:600}
+  .ex .corr{font:10px var(--sans);letter-spacing:.05em;color:#7A7261;margin-top:6px}
+  /* seal + stamp row */
+  .sealrow{display:flex;gap:18px;align-items:center;margin-top:16px;flex-wrap:wrap}
+  .seal{width:108px;height:108px;border-radius:50%;flex:none;position:relative;
+        background:conic-gradient(#33455A 0deg 360deg);display:none}
+  .seal.show{display:block}
+  .seal::after{content:"";position:absolute;inset:14px;border-radius:50%;
+               background:var(--panel)}
+  .seal .n{position:absolute;inset:0;display:flex;flex-direction:column;
+           align-items:center;justify-content:center;z-index:1;
+           font:700 17px var(--mono);color:#C8D2DC}
+  .seal .n small{font:8.5px var(--sans);letter-spacing:.12em;color:var(--label);
+                 text-transform:uppercase}
+  .finalstamp{display:none;font:700 14px var(--mono);letter-spacing:.12em;
+              color:var(--pen);border:2px solid var(--pen);border-radius:3px;
+              padding:12px 18px}
+  .finalstamp small{display:block;font:10.5px var(--mono);letter-spacing:.04em;
+                    color:var(--label);margin-top:5px}
+  .finalstamp.show{display:block}
+  .sealcap{font:11px/1.6 var(--mono);color:#5F7183;max-width:300px}
+
+  /* ===== sections ===== */
+  section{margin-top:58px}
+  .eyebrow{font:11px var(--mono);letter-spacing:.22em;color:var(--label);
+           text-transform:uppercase;margin-bottom:10px}
+  h2{font:700 23px/1.2 var(--serif);color:#EFE9DC;margin-bottom:14px;text-wrap:balance}
+  p.body{font:15px/1.65 var(--serif);color:#9FACB9;max-width:66ch;margin-bottom:12px}
+  p.body b{color:#D7DEE5;font-weight:600}
+  /* physician sheet */
+  .sheet{background:var(--paper);color:var(--ink);border-radius:4px;
+         padding:24px 28px;max-width:880px;
+         box-shadow:0 0 0 1px #D8CFBB inset,0 24px 60px rgba(0,0,0,.45)}
+  .sheet .hd{display:flex;justify-content:space-between;align-items:baseline;
+             flex-wrap:wrap;gap:8px;border-bottom:2px solid var(--ink);
+             padding-bottom:10px}
+  .sheet .pt{font:700 18px var(--serif)}
+  .sheet .app{font:11px var(--sans);letter-spacing:.14em;color:var(--faint)}
+  .covline{display:flex;gap:5px;flex-wrap:wrap;padding:10px 0;
+           border-bottom:1px solid #D8CFBB;align-items:center}
+  .covline .cl{font:10px var(--sans);letter-spacing:.04em;border:1px solid #C9BFA6;
+               border-radius:9px;padding:1px 9px;color:#5C5546}
+  .covline .cl.hit{border-color:var(--pen);color:var(--pen);font-weight:700}
+  .covline .cap{font:10.5px var(--sans);color:var(--faint);margin-right:4px}
+  .frow{display:grid;grid-template-columns:1fr 218px;gap:18px;
+        padding:15px 0;border-bottom:1px solid #D8CFBB}
+  @media(max-width:700px){.frow{grid-template-columns:1fr}}
+  .frow .let2{font:700 11px var(--sans);color:var(--paper);background:var(--pen);
+              border-radius:50%;width:17px;height:17px;line-height:17px;
+              text-align:center;display:inline-block;margin-right:6px}
+  .frow h4{font:700 15px/1.35 var(--serif);display:inline}
+  .frow .why2{font:13px/1.55 var(--serif);color:#4A4438;margin-top:5px}
+  .frow .rc{font:10.5px/1.5 var(--mono);color:#5C5546;background:var(--paper2);
+            border-left:2px solid #C9BFA6;padding:4px 8px;margin-top:7px}
+  .frow .ord{font:11px/1.5 var(--mono);background:#EFE8D5;border:1px solid #D5CAAE;
+             border-radius:3px;padding:8px 10px}
+  .frow .ord .lbl{font:700 9px var(--sans);letter-spacing:.14em;color:#8A5B00;
+                  display:block;margin-bottom:3px}
+  .frow .act{display:flex;gap:8px;margin-top:8px}
+  .frow .act span{font:600 11px var(--sans);border-radius:3px;padding:5px 11px;
+                  border:1px solid var(--ink)}
+  .frow .act .a{background:var(--ink);color:var(--paper)}
+  .sheet .foot{font:10.5px var(--sans);color:var(--faint);padding-top:12px}
+  /* rationale */
+  .research{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+            gap:12px;margin-top:16px}
+  .rcard{border:1px solid var(--line);border-radius:4px;padding:14px 16px;
+         background:var(--panel)}
+  .rcard .k{font:11px var(--mono);letter-spacing:.14em;color:var(--label);
+            text-transform:uppercase}
+  .rcard p{font:13.5px/1.55 var(--serif);color:#9FACB9;margin-top:6px}
+  .rcard b{color:#D7DEE5}
+  .delta{border-left:3px solid var(--pen);padding:2px 0 2px 14px;margin:10px 0;
+         font:14px/1.6 var(--serif);color:#9FACB9}
+  .delta b{color:#EFE9DC}
+  footer{margin-top:60px;font:11.5px var(--mono);color:#435364;line-height:1.7}
+  @media(prefers-reduced-motion:reduce){
+    .ex,.agent,.mark,.gateledger div,.streak{transition:none}
+  }
+</style>
+
+<div class="wrap">
+  <div class="studio">The Gauntlet · design direction 02.1 · 2026-07-18</div>
+  <h1>The Corridor: every attack <em>visibly travels</em><br>from its dimension, through the judge, to the page</h1>
+  <p class="lede">Clinical-partner feedback, incorporated: the swarm is not telemetry —
+  it is the <b>coverage proof</b>, and physicians read coverage as trust. So the swarm
+  returns, promoted: ten named failure dimensions on the left flank, a visible judge
+  gate where most attacks die with reasons, and the lit document where the survivors
+  land as red-pen exhibits. One continuous causal motion, left to right.</p>
+
+  <div class="stage" id="stage">
+    <div class="stagehead">
+      <span class="stamp">DISCHARGE PLAN · VANCE, ELEANOR · 07/16 14:32</span>
+      <span class="runmeta">replay of run 20260718-154243 — real events, condensed · 30 attacks · $0.58</span>
+      <button class="replaybtn" id="replay">▶ REPLAY THE RUN</button>
+    </div>
+    <div class="corridor">
+      <div class="field">
+        <div class="fieldhead">Attack field — 10 dimensions × 3 examiners</div>
+        <div id="lanes"></div>
+      </div>
+      <div class="gate">
+        <div class="gatehead">The Judge<b>four tests · default kill</b></div>
+        <div class="gatecount"><span id="killn">0</span><small>refuted here</small></div>
+        <div class="gateledger" id="gateledger"></div>
+      </div>
+      <div class="doc" id="doc">
+        <div class="docmeta">SYNTHETIC CHART — VANCE, ELEANOR · 78F · MRN 000-DEMO-4471 · HFrEF EF 30% · AF on warfarin · CKD 3b</div>
+        <h4>MEDICATION LIST AT DISCHARGE (MED REC 07/16)</h4>
+        <div class="ln"><span class="mark" data-ex="A">warfarin 5 mg PO daily — home med, CONTINUE<span class="exlab">A</span></span></div>
+        <div class="ln"><span class="mark" data-ex="A">TMP-SMX DS 800-160 mg PO BID — CONTINUE through 07/20<span class="exlab">A</span></span></div>
+        <div class="ln"><span class="mark" data-ex="C">furosemide 40 mg PO daily — home dose, UNCHANGED<span class="exlab">C</span></span></div>
+        <div class="ln strike">metoprolol succinate 50 mg PO daily — CONTINUE</div>
+        <h4>LABS (MOST RECENT)</h4>
+        <div class="ln"><span class="mark" data-ex="A">07/12: INR 2.4 (in range). NO INR drawn after 07/12.<span class="exlab">A</span></span></div>
+        <div class="ln"><span class="mark" data-ex="B">Blood cx x2 07/14 → NO GROWTH TO DATE (preliminary, day 2)<span class="exlab">B</span></span></div>
+        <h4>SCANNED OUTSIDE RECORD — CARDIOLOGY (FAXED, OCR'D)</h4>
+        <div class="ln"><span class="mark" data-ex="C">"…Target DRY WEIGHT 74.3 kg. …daily weights at home, call for gain &gt;1.5 kg…"<span class="exlab">C</span></span></div>
+        <h4>DISCHARGE ORDER + SUMMARY DRAFT — THE PLAN UNDER ATTACK</h4>
+        <div class="ln strike">Disposition: HOME today with daughter. Home PT referral placed.</div>
+        <div class="ln"><span class="mark" data-ex="B">[No mention of pending blood cultures. No INR follow-up ordered.]<span class="exlab">B</span></span></div>
+        <div class="ln strike">Follow-up: PCP in 1–2 weeks (patient to schedule).</div>
+      </div>
+    </div>
+    <div class="verdictrow">
+      <div class="ex" id="exA">
+        <div class="tag"><span class="let">A</span><span class="sev">TIER 1 · CRITICAL</span></div>
+        <h3>No post-discharge INR monitoring on continued warfarin</h3>
+        <div class="verdict">Warfarin continues with TMP-SMX — a known potentiator —
+          and no INR has been drawn since 07/12. The plan orders none.</div>
+        <div class="receipt"><b>Labs</b> — "07/12: INR 2.4 (in range). NO INR drawn after 07/12."</div>
+        <div class="corr">launched from ANTICOAGULATION · found by 5 of 30 · receipts machine-verified · ONC high-priority DDI</div>
+      </div>
+      <div class="ex" id="exB">
+        <div class="tag"><span class="let">B</span><span class="sev">TIER 1 · CRITICAL</span></div>
+        <h3>Pending blood cultures with no result ownership</h3>
+        <div class="verdict">Cultures drawn 07/14 are day-2 preliminary. Nobody owns
+          the final read; the summary draft never mentions them.</div>
+        <div class="receipt"><b>Labs</b> — "Blood cx x2 07/14 → NO GROWTH TO DATE (preliminary, day 2)"</div>
+        <div class="corr">launched from PENDING RESULTS · found by 3 of 30 · receipts machine-verified · CMS 42 CFR 482.43</div>
+      </div>
+      <div class="ex" id="exC">
+        <div class="tag"><span class="let">C</span><span class="sev hi">TIER 2 · HIGH</span></div>
+        <h3>4.1 kg above documented dry weight, diuretic unchanged</h3>
+        <div class="verdict">Cardiology's faxed target is 74.3 kg with daily weights.
+          She leaves at 78.4 kg on her home dose; plan says "resume home routine."</div>
+        <div class="receipt"><b>Outside record</b> — "Target DRY WEIGHT 74.3 kg …call for gain &gt;1.5 kg"</div>
+        <div class="corr">launched from VOLUME STATUS · found by 6 of 30 · receipts machine-verified · Joint Commission handoff class</div>
+      </div>
+    </div>
+    <div class="sealrow">
+      <div class="seal" id="seal"><div class="n">30<small>examined</small></div></div>
+      <div class="finalstamp" id="finalstamp">3 SURVIVING OBJECTIONS — 30 ATTACKS · 87s
+        <small>27 refuted at the gate · every receipt machine-verified verbatim ·
+        not a safety certification</small></div>
+      <div class="sealcap">the coverage seal: ten dimensions, thirty examiners, examined
+        in full — breached sectors in red. This seal is what the physician surface
+        inherits.</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="eyebrow">Surface 2 · What the physician sees</div>
+    <h2>The coverage seal travels; the swarm does not</h2>
+    <p class="body">The physician never watches agents. But your clinical partner is
+    right that <b>coverage is the trust</b> — so the physician surface opens with the
+    coverage line: ten named dimensions, each examined by three independent reviewers,
+    breached dimensions flagged. That is a review-of-systems idiom — enumerate the
+    dimensions, show each was checked — rendered for a discharge plan. Below it, the
+    findings, each anchored to chart evidence with one staged order and a two-click
+    decision. Dismissal requires a written rationale that enters the record.</p>
+    <div class="sheet">
+      <div class="hd"><span class="pt">Vance, Eleanor · 78F</span>
+        <span class="app">DISCHARGE SAFETY REVIEW · ATTACKED 30 WAYS AT 14:36</span></div>
+      <div class="covline"><span class="cap">EXAMINED ×3 EACH:</span>
+        <span class="cl">drug interactions</span><span class="cl hit">anticoagulation ■</span>
+        <span class="cl hit">volume status ■</span><span class="cl">renal / electrolytes</span>
+        <span class="cl hit">pending results ■</span><span class="cl">follow-up</span>
+        <span class="cl">med-rec conflicts</span><span class="cl">outside records</span>
+        <span class="cl">care coordination</span><span class="cl">infection course</span></div>
+      <div class="frow">
+        <div>
+          <span class="let2">A</span><h4>No post-discharge INR monitoring on continued warfarin</h4>
+          <div class="why2">TMP-SMX potentiates warfarin; last INR was 07/12. Nothing
+            in the plan rechecks it.</div>
+          <div class="rc">Labs — "07/12: INR 2.4 (in range). NO INR drawn after 07/12."</div>
+        </div>
+        <div>
+          <div class="ord"><span class="lbl">STAGED ORDER</span>INR + BMP draw 07/18,
+            results to Dr. Patel + coumadin clinic same-day</div>
+          <div class="act"><span class="a">Accept — place order</span><span>Dismiss…</span></div>
+        </div>
+      </div>
+      <div class="frow">
+        <div>
+          <span class="let2">B</span><h4>Pending blood cultures with no result ownership</h4>
+          <div class="why2">Day-2 preliminary cultures; no named owner, absent from
+            the summary draft.</div>
+          <div class="rc">Labs — "Blood cx x2 07/14 → NO GROWTH TO DATE (preliminary, day 2)"</div>
+        </div>
+        <div>
+          <div class="ord"><span class="lbl">STAGED ORDER</span>Named result owner
+            Dr. Patel; micro pages hospitalist on any growth</div>
+          <div class="act"><span class="a">Accept — place order</span><span>Dismiss…</span></div>
+        </div>
+      </div>
+      <div class="foot">Every quoted receipt is machine-verified verbatim against the
+        chart. Findings are adversarially reviewed arguments, not certifications.
+        Attacked and not broken ≠ safe.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Why this direction</div>
+    <h2>Coverage is the trust; evidence is the proof; the gate is the precision</h2>
+    <div class="research">
+      <div class="rcard"><div class="k">Clinical partner</div>
+        <p>"The swarm instills trust that many dimensions were covered." Physicians
+        trust <b>enumerated coverage</b> — the review-of-systems, the surgical
+        checklist. The field names its ten dimensions and shows three examiners each;
+        the seal persists after the motion ends.</p></div>
+      <div class="rcard"><div class="k">Alert fatigue</div>
+        <p>33–96% of CDS alerts are ignored. Our answer is spatial: the judge gate
+        is <b>where alert fatigue goes to die</b>, on screen — 27 attacks refuted
+        with reasons before anything reached the physician. The gate count is the
+        precision story told in one number.</p></div>
+      <div class="rcard"><div class="k">The hosts' pattern</div>
+        <p>Abridge's Linked Evidence traces every note sentence to source audio.
+        Survivor streaks that land on the <b>exact chart span</b> and become lettered
+        exhibits are the same trust mechanic, pointed at safety.</p></div>
+    </div>
+    <div class="delta" style="margin-top:22px"><b>What changed from 02:</b> the swarm
+    returns as the left flank of a three-zone corridor — field → gate → document —
+    so an attack's whole life is one continuous motion instead of disconnected
+    panels. The judge becomes a visible membrane with a body count. The run mints a
+    ten-sector coverage seal that both surfaces share: full theater in the mission
+    log, quiet enumeration in the physician view. Palette, serif verdicts, and the
+    lit-paper document carry over from 02 unchanged.</div>
+  </section>
+
+  <footer>Design pitch — the replay uses condensed real events from run
+  20260718-154243 (findings, corroboration counts, kill reasons verbatim from the
+  live system; timing compressed). Production surfaces render the same live event
+  stream that drives the CLI. · The Gauntlet, Abridge x Anthropic hackathon 2026-07-18.</footer>
+</div>
+
+<script>
+const LANES = ['drug interactions','anticoagulation','volume status',
+  'renal / electrolytes','pending results','follow-up continuity',
+  'med-rec conflicts','outside records','care coordination','infection course'];
+const SURV = { A: {lane: 1, n: 5}, B: {lane: 4, n: 3}, C: {lane: 2, n: 6} };
+const KILLS = [
+  [0, 'evidence', 'quote not verbatim — dead on arrival'],
+  [8, 'materiality', 'home PT referral already placed'],
+  [6, 'addressed', '"CONTINUE through 07/20" — duration documented'],
+  [2, 'evidence', 'quote not verbatim in chart'],
+  [3, 'addressed', 'renally reviewed: "CrCl ~40: acceptable"'],
+  [9, 'addressed', 'urine cx pan-sensitive, afebrile 48h'],
+  [5, 'materiality', 'judgment call within accepted practice'],
+  [7, 'evidence', 'quoted text absent from chart'],
+];
+const lanesEl = document.getElementById('lanes');
+LANES.forEach((nm, i) => {
+  const row = document.createElement('div');
+  row.className = 'flane';
+  row.innerHTML = `<div class="nm">${nm}</div><div class="agents">` +
+    [0,1,2].map(j => `<i class="agent" id="ag${i}-${j}"></i>`).join('') + '</div>';
+  lanesEl.appendChild(row);
+});
+const $ = id => document.getElementById(id);
+const stage = $('stage');
+let timers = [], killn = 0;
+function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+function fly(fromEl, toEl, red, dur) {
+  const s = stage.getBoundingClientRect();
+  const a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect();
+  const st = document.createElement('div');
+  st.className = 'streak' + (red ? ' red' : '');
+  const x0 = a.right - s.left, y0 = a.top - s.top + a.height / 2;
+  const x1 = b.left - s.left, y1 = b.top - s.top + b.height / 2;
+  const ang = Math.atan2(y1 - y0, x1 - x0);
+  st.style.left = x0 + 'px'; st.style.top = y0 + 'px';
+  st.style.transform = `rotate(${ang}rad)`;
+  st.style.transition = `left ${dur}ms linear, top ${dur}ms linear`;
+  stage.appendChild(st);
+  requestAnimationFrame(() => { st.style.left = x1 + 'px'; st.style.top = y1 + 'px'; });
+  timers.push(setTimeout(() => st.remove(), dur + 60));
+}
+function gateLine(lane, test, why) {
+  killn++; $('killn').textContent = killn;
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="test">${test}</span> ${why}`;
+  $('gateledger').prepend(d);
+  requestAnimationFrame(() => d.classList.add('in'));
+}
+function reset() {
+  timers.forEach(clearTimeout); timers = []; killn = 0;
+  $('killn').textContent = '0'; $('gateledger').innerHTML = '';
+  document.querySelectorAll('.agent').forEach(a => a.className = 'agent');
+  document.querySelectorAll('.mark').forEach(m => m.classList.remove('inked'));
+  document.querySelectorAll('.strike').forEach(s => s.classList.remove('dead'));
+  document.querySelectorAll('.ex').forEach(x => x.classList.remove('in'));
+  document.querySelectorAll('.streak').forEach(s => s.remove());
+  $('seal').classList.remove('show'); $('finalstamp').classList.remove('show');
+}
+function finish() {
+  document.querySelectorAll('.agent').forEach(a => {
+    if (!a.classList.contains('surv')) a.className = 'agent dead'; });
+  Object.entries(SURV).forEach(([ex, s]) =>
+    $('ag' + s.lane + '-0').className = 'agent surv');
+  document.querySelectorAll('.mark').forEach(m => m.classList.add('inked'));
+  document.querySelectorAll('.strike').forEach(s => s.classList.add('dead'));
+  document.querySelectorAll('.ex').forEach(x => x.classList.add('in'));
+  if (!killn) { killn = 27; $('killn').textContent = '27';
+    KILLS.forEach(k => { const d = document.createElement('div');
+      d.className = 'in';
+      d.innerHTML = `<span class="test">${k[1]}</span> ${k[2]}`;
+      $('gateledger').appendChild(d); }); }
+  $('seal').style.background =
+    'conic-gradient(#33455A 0deg 36deg,#C43B2E 36deg 72deg,#C43B2E 72deg 108deg,' +
+    '#33455A 108deg 144deg,#C43B2E 144deg 180deg,#33455A 180deg 360deg)';
+  $('seal').classList.add('show');
+  $('finalstamp').classList.add('show');
+}
+function replay() {
+  reset();
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+  // agents wake, lane by lane
+  document.querySelectorAll('.agent').forEach((a, i) =>
+    at(150 + i * 45, () => a.classList.add('live')));
+  const gate = document.querySelector('.gatecount');
+  // kills: streak from agent to gate, agent dies, ledger line
+  KILLS.forEach((k, i) => at(1800 + i * 520, () => {
+    const ag = $('ag' + k[0] + '-' + (i % 3));
+    fly(ag, gate, false, 420);
+    timers.push(setTimeout(() => { ag.className = 'agent dead';
+      gateLine(k[0], k[1], k[2]); }, 430));
+  }));
+  // background attrition to 27
+  at(6200, () => { const t = setInterval(() => {
+      if (killn >= 27) { clearInterval(t); return; }
+      killn++; $('killn').textContent = killn;
+      const live = [...document.querySelectorAll('.agent.live')];
+      if (live.length > 3) live[Math.floor(live.length / 2)].className = 'agent dead';
+    }, 130); timers.push(t); });
+  // survivors: red streak from lane THROUGH gate to the exact mark
+  ['A', 'B', 'C'].forEach((ex, i) => at(7400 + i * 1000, () => {
+    const s = SURV[ex];
+    const ag = $('ag' + s.lane + '-0');
+    ag.className = 'agent surv';
+    const target = document.querySelector(`.mark[data-ex="${ex}"]`);
+    fly(ag, gate, true, 300);
+    timers.push(setTimeout(() => fly(gate, target, true, 380), 310));
+    timers.push(setTimeout(() => {
+      document.querySelectorAll(`.mark[data-ex="${ex}"]`)
+        .forEach(m => m.classList.add('inked'));
+      $('ex' + ex).classList.add('in');
+    }, 700));
+  }));
+  at(8000, () => document.querySelectorAll('.strike')
+    .forEach((s, i) => timers.push(setTimeout(() => s.classList.add('dead'), i * 300))));
+  at(11000, finish);
+}
+$('replay').onclick = replay;
+finish();
+</script>
