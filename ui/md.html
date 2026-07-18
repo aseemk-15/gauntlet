@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Discharge Safety Review</title>
+<style>
+  :root{
+    --bg:#F5F7F9; --card:#FFFFFF; --ink:#1A2733; --mut:#5B6B7A; --line:#D9E1E8;
+    --blue:#0B63C5; --red:#B3372B; --redbg:#FBF1F0; --amb:#8A5B00; --ambbg:#FDF6E7;
+    --grn:#1F7A3F; --grnbg:#EFF7F1;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--ink);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:22px 20px 60px}
+  header{display:flex;justify-content:space-between;align-items:flex-start;
+         gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--line);
+         padding-bottom:14px;margin-bottom:6px}
+  .pt .name{font-size:19px;font-weight:650}
+  .pt .sub{font-size:13px;color:var(--mut)}
+  .app{text-align:right}
+  .app .t{font-size:13px;font-weight:650;letter-spacing:.02em}
+  .app .s{font-size:12px;color:var(--mut)}
+  #status{font-size:13.5px;color:var(--mut);padding:12px 2px}
+  #status b{color:var(--ink)}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);
+        border-top-color:var(--blue);border-radius:50%;margin-right:7px;
+        vertical-align:-2px;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  /* clean state */
+  #clean{display:none;background:var(--grnbg);border:1px solid #BFDCC8;
+         border-radius:8px;padding:14px 16px;margin:10px 0;font-size:14.5px}
+  #clean b{color:var(--grn)}
+  #clean .fine{font-size:12px;color:var(--mut);margin-top:4px}
+  #residual{display:none;background:var(--redbg);border:1px solid #E7C2BD;
+            border-radius:8px;padding:14px 16px;margin:10px 0;font-size:14px}
+  /* cards */
+  .card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--red);
+        border-radius:8px;padding:16px 18px;margin:12px 0;
+        box-shadow:0 1px 2px rgba(26,39,51,.06)}
+  .card.sev3{border-left-color:#C9A227}
+  .card.accepted{border-left-color:var(--grn)}
+  .card.dismissedc{border-left-color:var(--line);opacity:.75}
+  .pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;
+        border-radius:10px;padding:1px 10px;margin-bottom:6px}
+  .pill.s1{background:var(--redbg);color:var(--red)}
+  .pill.s2{background:var(--ambbg);color:var(--amb)}
+  .pill.s3{background:#F2F4E9;color:#6B7431}
+  .pill.conf{background:#EDF3FB;color:var(--blue)}
+  .card h3{font-size:16.5px;font-weight:650;margin:2px 0 6px;text-wrap:balance}
+  .why{font-size:14px;color:var(--ink)}
+  .cite{font-size:12px;color:var(--mut);margin-top:6px}
+  details{margin-top:10px}
+  summary{font-size:13px;color:var(--blue);cursor:pointer;user-select:none}
+  .rcpt{font:12.5px var(--mono);color:var(--ink);background:#F7F9FB;
+        border-left:3px solid var(--line);padding:6px 10px;margin:7px 0;
+        border-radius:0 4px 4px 0}
+  .rcpt .src{color:var(--blue);font-weight:600}
+  .order{font:13px var(--mono);background:#F2F6FB;border:1px solid #CFE0F2;
+         border-radius:6px;padding:10px 12px;margin-top:12px;white-space:pre-wrap}
+  .order .lbl{font:11px -apple-system,sans-serif;font-weight:700;letter-spacing:.08em;
+              color:var(--blue);display:block;margin-bottom:4px}
+  .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center}
+  button{font:600 13.5px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+         border-radius:6px;padding:9px 16px;cursor:pointer;border:1px solid var(--line)}
+  .accept{background:var(--blue);border-color:var(--blue);color:#fff}
+  .accept:hover{background:#0A57AE}
+  .dismiss{background:#fff;color:var(--mut)}
+  .dismiss:hover{border-color:var(--mut)}
+  button:disabled{opacity:.45;cursor:default}
+  .rat{display:none;flex:1;min-width:240px}
+  .rat input{width:100%;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);
+             border-radius:6px}
+  .decided{font-size:13.5px;font-weight:600}
+  .decided.ok{color:var(--grn)} .decided.no{color:var(--mut)}
+  .fine{font-size:12px;color:var(--mut)}
+  /* bottom bar */
+  #bar{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);
+       padding:18px 0 6px;display:none}
+  #bar button{width:100%;padding:12px}
+  #bar .reverify{background:var(--amb);border-color:var(--amb);color:#fff}
+  /* show the work */
+  #work{margin-top:26px}
+  #work .lines{font:12px var(--mono);color:var(--mut);background:#FBFCFD;
+               border:1px solid var(--line);border-radius:6px;padding:10px 12px;
+               max-height:260px;overflow-y:auto}
+  #work .lines div{padding:2px 0;border-bottom:1px dashed #EDF1F4}
+  #work .lines b{color:var(--ink)}
+  footer{margin-top:30px;font-size:11.5px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="pt"><div class="name" id="ptname">—</div><div class="sub" id="ptsub"></div></div>
+    <div class="app"><div class="t">Discharge Safety Review</div>
+      <div class="s">adversarial verification · The Gauntlet</div></div>
+  </header>
+
+  <div id="status"><span class="spin" id="spinner" style="display:none"></span><span id="statustext">Waiting for a review…</span></div>
+
+  <div id="clean"><b>Nothing survived adversarial review.</b>
+    <span id="cleandetail"></span>
+    <div class="fine">Attacked and not broken — not a safety certification. The
+    clinician remains responsible for all decisions.</div></div>
+  <div id="residual"></div>
+
+  <div id="cards"></div>
+
+  <div id="bar"><button class="reverify" id="reverifybtn">Re-verify amended plan — re-attack the fixed areas</button></div>
+
+  <div id="work">
+    <details><summary id="worksum">Show the work</summary>
+      <div class="lines" id="worklines"></div></details>
+  </div>
+
+  <footer>Every quoted receipt is machine-verified verbatim against the chart.
+  Findings are adversarially reviewed arguments, not certifications. All decisions
+  and dismissal rationales are recorded in the run's audit trail.</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let runDir = new URLSearchParams(location.search).get('run');
+let nLines = 0, meta = null, findings = [], decisions = {};
+let fixSubmitted = false, sawFixEvents = false, nChecks = 0, nKill = 0;
+const SEV = {1: ['s1', 'CRITICAL'], 2: ['s2', 'HIGH'], 3: ['s3', 'MODERATE']};
+
+function runTime() {
+  const m = (runDir || '').match(/(\d{8})-(\d{2})(\d{2})/);
+  return m ? `${m[2]}:${m[3]}` : '';
+}
+function status(txt, busy) {
+  $('statustext').innerHTML = txt;
+  $('spinner').style.display = busy ? 'inline-block' : 'none';
+}
+function work(html) {
+  const d = document.createElement('div'); d.innerHTML = html;
+  $('worklines').appendChild(d);
+  $('worksum').textContent =
+    `Show the work — ${nChecks} independent checks · ${nKill} objections rejected in review`;
+}
+
+async function loadPatient() {
+  if (!meta || !meta.chart) return;
+  try {
+    const txt = await fetch('/' + meta.chart).then(r => r.text());
+    const stripped = txt.replace(/<!--[\s\S]*?-->/g, '');
+    const m = stripped.match(/^- ([A-Z][^\n]{3,70})$/m) ||
+              stripped.match(/^- ([A-Z][^.\n]{3,60})[.,]/m);
+    if (meta.encounter) {
+      $('ptname').textContent = meta.encounter;
+      $('ptsub').textContent = 'organizer synthetic encounter';
+    } else if (m) {
+      const parts = m[1].split('. ');
+      $('ptname').textContent = parts[0].replace(/\.$/, '');
+      $('ptsub').textContent = (parts.slice(1).join(' · ') || '') ;
+    }
+  } catch (err) {}
+}
+
+function maybeSubmit() {
+  if (fixSubmitted || sawFixEvents || !findings.length) return;
+  if (findings.some(f => !decisions[f.id])) return;
+  fixSubmitted = true;
+  status('Placing accepted orders and amending the plan of record…', true);
+  const dismiss = findings.filter(f => decisions[f.id].startsWith('dismiss'))
+    .map(f => ({ id: f.id, rationale: decisions[f.id].slice(8) || 'clinician judgment' }));
+  fetch('/api/fix', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ run: runDir, dismiss }) }).catch(() => {});
+}
+
+function card(f) {
+  const el = document.createElement('div');
+  const [cls, label] = SEV[f.tier] || ['s2', 'REVIEW'];
+  el.className = 'card' + (f.tier === 3 ? ' sev3' : '');
+  el.id = 'card-' + f.id;
+  const conf = f.found_by > 1
+    ? `independently corroborated by ${f.found_by} reviewers`
+    : 'single-source — confirmed under maximum-strictness review';
+  el.innerHTML =
+    `<span class="pill ${cls}">${label}</span> <span class="pill conf">${conf}</span>` +
+    `<h3>${f.title}</h3>` +
+    `<div class="why">${f.claim || ''}</div>` +
+    `<div class="cite">${f.citation || ''} · receipts machine-verified verbatim</div>` +
+    `<details><summary>Evidence from the chart (${(f.quotes || []).length})</summary>` +
+    (f.quotes || []).map(q =>
+      `<div class="rcpt"><span class="src">${q.section}</span> — “${q.quote}”</div>`).join('') +
+    `</details>` +
+    `<div class="order"><span class="lbl">STAGED ORDER</span>${f.proposed_order || ''}</div>` +
+    `<div class="actions">` +
+    `<button class="accept">Accept — place order</button>` +
+    `<button class="dismiss">Dismiss…</button>` +
+    `<span class="rat"><input placeholder="Rationale (required) — recorded in the chart audit trail"></span>` +
+    `</div>`;
+  const actions = el.querySelector('.actions');
+  const rat = el.querySelector('.rat'), inp = rat.querySelector('input');
+  el.querySelector('.accept').onclick = () => {
+    if (sawFixEvents || fixSubmitted) return;
+    decisions[f.id] = 'fix';
+    el.classList.add('accepted');
+    actions.innerHTML = '<span class="decided ok">✓ Accepted — order will transmit when review decisions are complete</span>';
+    maybeSubmit();
+  };
+  el.querySelector('.dismiss').onclick = () => {
+    rat.style.display = 'block'; inp.focus();
+  };
+  inp.onkeydown = e => {
+    if (e.key !== 'Enter' || !inp.value.trim() || sawFixEvents || fixSubmitted) return;
+    decisions[f.id] = 'dismiss:' + inp.value.trim();
+    el.classList.add('dismissedc');
+    actions.innerHTML = `<span class="decided no">✗ Dismissed — “${inp.value.trim()}” (recorded)</span>`;
+    maybeSubmit();
+  };
+  return el;
+}
+
+async function loadFindings() {
+  try {
+    findings = await fetch('/' + runDir + '/findings.json').then(r => r.json());
+    $('cards').innerHTML = '';
+    if (!findings.length) {
+      $('clean').style.display = 'block';
+      $('cleandetail').textContent =
+        ` ${nChecks} independent checks at ${runTime()} — nothing to show you.`;
+      status(`Review complete at ${runTime()}.`, false);
+      return;
+    }
+    for (const f of findings) $('cards').appendChild(card(f));
+    if (!sawFixEvents)
+      status(`<b>${findings.length} finding(s)</b> survived adversarial review of ` +
+             `<b>${nChecks}</b> independent checks at ${runTime()}. ` +
+             `Each needs a decision.`, false);
+  } catch (err) {}
+}
+
+function strip(id, html, cls) {
+  const c = $('card-' + id);
+  if (!c) return;
+  if (cls) c.classList.add(cls);
+  const a = c.querySelector('.actions');
+  if (a) a.innerHTML = html;
+}
+
+function handle(e) {
+  switch (e.type) {
+    case 'attack_begin':
+      nChecks = e.agents; nKill = 0;
+      status(`Reviewing the plan — <b>${e.agents}</b> independent checks across ` +
+             `<b>${e.lanes}</b> failure categories…`, true);
+      work(`[system] ${e.agents} adversarial reviewers launched`);
+      break;
+    case 'judge_begin':
+      status(`Evidence review — ${e.objections} objections being adjudicated…`, true);
+      break;
+    case 'killed':
+      nKill++;
+      work(`<b>${e.agent}</b> — rejected (${e.test}): ${(e.why || '').slice(0, 130)}`);
+      break;
+    case 'survivor':
+      work(`<b>${e.agent}</b> — SURVIVED review`);
+      break;
+    case 'cluster_done': case 'receipts_enforced': loadFindings(); break;
+    case 'order_emitted':
+      sawFixEvents = true;
+      work(`[order] ✓ ${e.order}`);
+      strip(e.finding,
+        '<span class="decided ok">✓ Order placed — unverified until re-run</span>', 'accepted');
+      break;
+    case 'covered':
+      sawFixEvents = true;
+      strip(e.finding,
+        '<span class="decided ok">✓ Covered by orders already placed</span>', 'accepted');
+      break;
+    case 'dismissed':
+      sawFixEvents = true;
+      work(`[dismissed] ${e.finding} — ${e.rationale}`);
+      strip(e.finding,
+        `<span class="decided no">✗ Dismissed — “${e.rationale}” (recorded)</span>`, 'dismissedc');
+      break;
+    case 'amendment_written':
+      status(`Plan amended — ${e.orders} orders placed; the amendment supersedes ` +
+             `the prior med list. The amended plan has <b>not been re-verified yet</b>.`, false);
+      $('bar').style.display = 'block';
+      if (meta) meta.chart = runDir + '/amended-chart.md';
+      break;
+    case 'reverify_begin':
+      $('bar').style.display = 'none';
+      status('Re-attacking the amended plan — only the fixed areas, at maximum strictness…', true);
+      work('[system] targeted re-verification launched');
+      break;
+    case 'banner': {
+      const stats = (e.text.split(' — ')[1] || '').replace(/ ?· attacked and not broken/, '');
+      $('clean').style.display = 'block';
+      $('cleandetail').textContent =
+        ` Amended plan re-attacked (${stats}) — nothing survived.`;
+      status(`Re-verification complete at ${runTime()}.`, false);
+      work('[system] re-verification clean — 0 surviving objections');
+      break; }
+    case 'residual_gaps':
+      $('residual').style.display = 'block';
+      $('residual').innerHTML =
+        `<b>${e.count} objection(s) survived re-verification.</b> The fix was ` +
+        `incomplete — review the remaining gap(s). That is this system working.`;
+      $('bar').style.display = 'block';
+      break;
+  }
+}
+
+$('reverifybtn').onclick = () => {
+  fetch('/api/reverify', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ run: runDir }) }).catch(() => {});
+};
+
+function resetView() {
+  nLines = 0; meta = null; findings = []; decisions = {};
+  fixSubmitted = false; sawFixEvents = false; nChecks = 0; nKill = 0;
+  $('cards').innerHTML = ''; $('worklines').innerHTML = '';
+  $('clean').style.display = 'none'; $('residual').style.display = 'none';
+  $('bar').style.display = 'none';
+  $('worksum').textContent = 'Show the work';
+}
+
+async function latest() {
+  if (runDir && nLines === 0 && !meta) return runDir;
+  const r = await fetch('/api/latest').then(r => r.json()).catch(() => null);
+  return (r && r.run) || runDir;
+}
+
+async function poll() {
+  const rd = await latest();
+  if (rd) {
+    if (rd !== runDir) { runDir = rd; resetView(); }
+    if (!meta) {
+      meta = await fetch('/' + runDir + '/meta.json').then(r => r.json()).catch(() => null);
+      if (meta) loadPatient();
+    }
+    const txt = await fetch('/' + runDir + '/events.jsonl').then(r => r.text()).catch(() => '');
+    const lines = txt.split('\n').filter(Boolean);
+    for (let i = nLines; i < lines.length; i++) {
+      try { handle(JSON.parse(lines[i])); } catch (err) {}
+    }
+    nLines = lines.length;
+  }
+  setTimeout(poll, 500);
+}
+poll();
+</script>
+</body>
+</html>

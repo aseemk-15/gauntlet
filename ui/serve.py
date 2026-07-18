@@ -29,6 +29,8 @@ class Handler(SimpleHTTPRequestHandler):
             return
         if self.path == "/":
             self.path = "/ui/index.html"
+        elif self.path.split("?")[0] == "/md":
+            self.path = "/ui/md.html"
         super().do_GET()
 
     def _spawn(self, cmd, stamp):

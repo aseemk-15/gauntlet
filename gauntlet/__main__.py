@@ -5,6 +5,7 @@ import sys
 
 from .attack import fan_out
 from .chart import load_chart
+from .cdshooks import export_cards
 from .events import Run
 from .fixloop import apply_fixes, render_card
 from .integrity import enforce_receipts
@@ -58,6 +59,7 @@ def main(argv=None):
             singleton_gate(run, chart,
                            [classify(f) for f in cluster(run, survivors)]),
             survivors)
+        export_cards(run, findings)
         (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
         (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
         (run.dir / "meta.json").write_text(json.dumps({"chart": str(args.chart)}))
@@ -102,6 +104,7 @@ def do_ambient(key: str, summary_path: str | None = None):
         singleton_gate(run, chart,
                        [classify(f) for f in cluster(run, survivors)]),
         survivors)
+    export_cards(run, findings)
     (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
     (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
     print(f"\n{len(results)} attacks ({len(objections)} objections) → "
