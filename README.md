@@ -48,8 +48,13 @@ echo "ANTHROPIC_API_KEY=sk-ant-..." > .env   # never committed
 # poor variant -> 4 verified findings; corrected variant -> 0 survivors.
 # The mission log also has an "attack your own summary" panel that launches real runs.
 
-# mission-log view (renders the same real event stream the CLI prints):
-.venv/bin/python ui/serve.py                       # http://localhost:3010
+# two views of the same real event stream (CLI prints it too):
+.venv/bin/python ui/serve.py
+#   http://localhost:3010      mission log (engineering view)
+#   http://localhost:3010/md   physician view: accept / dismiss-with-rationale,
+#                              re-verify, quiet-by-default clean state
+# every run also writes runs/<dir>/cds-cards.json — CDS Hooks cards, the payload an
+# EHR order-sign hook (e.g. Epic CDS Hooks) would render at discharge signing
 ```
 
 ## How it works
