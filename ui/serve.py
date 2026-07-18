@@ -34,6 +34,8 @@ class Handler(SimpleHTTPRequestHandler):
             self.path = "/ui/md.html"
         elif route == "/classic":
             self.path = "/ui/classic.html"
+        elif route == "/corridor":
+            self.path = "/ui/corridor.html"
         super().do_GET()
 
     def _spawn(self, cmd, stamp):

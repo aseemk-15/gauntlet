@@ -48,11 +48,15 @@ echo "ANTHROPIC_API_KEY=sk-ant-..." > .env   # never committed
 # poor variant -> 4 verified findings; corrected variant -> 0 survivors.
 # The mission log also has an "attack your own summary" panel that launches real runs.
 
-# two views of the same real event stream (CLI prints it too):
+# views of the same real event stream (CLI prints it too):
 .venv/bin/python ui/serve.py
-#   http://localhost:3010      mission log (engineering view)
-#   http://localhost:3010/md   physician view: accept / dismiss-with-rationale,
-#                              re-verify, quiet-by-default clean state
+#   http://localhost:3010            the note under review: EMR-neutral discharge
+#                                    summary; run ceremony overlay; red-pen highlights
+#                                    with popover accept/dismiss; accepted orders
+#                                    insert as tracked changes; re-verify chip
+#   http://localhost:3010/md         physician sheet (single-column card view)
+#   http://localhost:3010/corridor   corridor mission log (field -> judge gate -> document)
+#   http://localhost:3010/classic    original mission log
 # every run also writes runs/<dir>/cds-cards.json — CDS Hooks cards, the payload an
 # EHR order-sign hook (e.g. Epic CDS Hooks) would render at discharge signing
 ```

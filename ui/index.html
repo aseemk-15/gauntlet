@@ -3,291 +3,239 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>THE GAUNTLET — the corridor</title>
+<title>Discharge Summary — The Gauntlet</title>
 <style>
   :root{
-    --room:#10151B; --panel:#1E2731; --line:#2E3C4D; --label:#7A93AD;
-    --paper:#F4EFE4; --paper2:#EDE6D6; --ink:#232019; --faint:#8A8474;
-    --pen:#C43B2E; --amber:#D99A2B; --grn:#2E7D4F;
+    --bg:#EDF0F3; --chrome:#FFFFFF; --line:#D5DCE3; --ink:#1C2833; --mut:#5D6C7B;
+    --paper:#FFFFFF; --pen:#C43B2E; --penbg:#FBEFED; --amber:#8A5B00;
+    --ambbg:#FBF4E4; --grn:#1F7A3F; --grnbg:#EFF7F1; --blue:#0B63C5;
+    --room:#10151B; --roomtxt:#C8D2DC; --roomlabel:#7A93AD;
     --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
-    --serif:Charter,Georgia,'Times New Roman',serif;
-    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --serif:Charter,Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   }
   *{box-sizing:border-box;margin:0}
-  html{background:var(--room)}
-  body{background:var(--room);color:#C8D2DC;font:14px/1.5 var(--sans)}
-  .wrap{max-width:1280px;margin:0 auto;padding:18px 22px 50px}
-  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
-  .wordmark{font:700 17px var(--mono);letter-spacing:.18em;color:#EFE9DC}
-  .wordmark span{color:var(--pen)}
-  .chip{font:11px var(--mono);color:var(--label);border:1px solid var(--line);
-        border-radius:3px;padding:4px 9px;background:var(--panel)}
-  .chip b{color:#D7DEE5;font-weight:600}
-  .modes{margin-left:auto;display:flex;border:1px solid var(--line);
-         border-radius:3px;overflow:hidden}
-  .modes button{font:11px var(--mono);letter-spacing:.1em;background:var(--panel);
-                color:var(--label);border:0;padding:6px 12px;cursor:pointer}
-  .modes button.on{background:#EFE9DC;color:var(--room);font-weight:700}
-  button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
-
-  .stage{border:1px solid var(--line);border-radius:6px;background:var(--panel);
-         padding:16px;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative}
-  .stagehead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-  .stamp{font:700 10.5px var(--sans);letter-spacing:.18em;color:var(--room);
-         background:#EFE9DC;padding:4px 10px;border-radius:2px}
-  .runmeta{font:11px var(--mono);color:var(--label);font-variant-numeric:tabular-nums}
-  .runbtn{margin-left:auto;font:700 12px var(--mono);letter-spacing:.13em;
-          color:var(--pen);background:transparent;border:1px solid var(--pen);
-          border-radius:3px;padding:8px 16px;cursor:pointer;min-width:250px}
-  .runbtn:hover{background:rgba(196,59,46,.1)}
-  .runbtn:disabled{opacity:.4;cursor:default}
-  .runbtn.rerun{color:var(--amber);border-color:var(--amber)}
-
-  .corridor{display:grid;grid-template-columns:216px 190px 1fr;gap:0;position:relative}
-  @media(max-width:940px){.corridor{grid-template-columns:1fr}
-    .gate{border:0!important;border-top:1px dashed var(--line)!important;
-          border-bottom:1px dashed var(--line)!important}}
-  .field{padding-right:14px;min-height:340px}
-  .fieldhead{font:10.5px var(--mono);letter-spacing:.18em;color:var(--label);
-             text-transform:uppercase;margin-bottom:8px}
-  #ambientctl{margin-bottom:10px}
-  #ambientctl select,#ambientctl textarea{width:100%;background:var(--room);
-    color:#C8D2DC;border:1px solid var(--line);border-radius:3px;padding:6px;
-    font:11px var(--mono);margin-bottom:6px}
-  .flane{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;
-         padding:4.5px 0;border-bottom:1px solid #1E2833}
-  .flane .nm{font:11px var(--sans);letter-spacing:.07em;color:#8FA1B2;
-             text-transform:uppercase;white-space:nowrap;overflow:hidden;
-             text-overflow:ellipsis}
-  .agents{display:flex;gap:4px}
-  .agent{width:13px;height:13px;border-radius:50%;background:#232E3A;
-         border:1px solid #2C3947;transition:all .3s}
-  .agent.live{background:#3D4F61;border-color:var(--label);
-              box-shadow:0 0 6px rgba(122,147,173,.5)}
-  .agent.obj{background:#4E4632;border-color:var(--amber)}
-  .agent.dead{background:#1B242E;border-color:transparent;opacity:.45}
-  .agent.surv{background:var(--pen);border-color:var(--pen);
-              box-shadow:0 0 8px rgba(196,59,46,.6)}
-
-  .gate{border-left:1px dashed #4A607A;border-right:1px dashed #4A607A;
-        padding:0 10px;display:flex;flex-direction:column;min-height:340px}
-  .gatehead{font:10.5px var(--mono);letter-spacing:.18em;color:var(--label);
-            text-transform:uppercase;text-align:center}
-  .gatehead b{display:block;font:700 9.5px var(--sans);letter-spacing:.1em;
-              color:#5F7183;margin-top:2px}
-  .gatecount{font:700 34px var(--mono);color:#C8D2DC;text-align:center;
-             padding:8px 0 2px;font-variant-numeric:tabular-nums}
-  .gatecount small{display:block;font:9px var(--sans);letter-spacing:.14em;
-                   color:#7A93AD;text-transform:uppercase}
-  .gateledger{flex:1;overflow-y:auto;font:11px/1.55 var(--mono);color:#8FA1B2;
-              max-height:420px}
-  .gateledger div{padding:3px 0;border-bottom:1px dotted #2A3B4D}
-  .gateledger .test{color:var(--amber)}
-
-  .doc{background:var(--paper);color:var(--ink);border-radius:0 3px 3px 0;
-       padding:18px 20px;font:11.5px/1.65 var(--mono);
-       box-shadow:0 0 0 1px #D8CFBB inset,0 0 60px rgba(244,239,228,.12);
-       max-height:470px;overflow-y:auto}
-  .doc .docmeta{font-size:10px;color:var(--faint);letter-spacing:.06em;
-                border-bottom:1px solid #D8CFBB;padding-bottom:6px;margin-bottom:9px}
-  .doc h4{font:700 10px var(--sans);letter-spacing:.14em;color:var(--faint);
-          margin:11px 0 3px}
-  .ln{padding:1px 2px;border-radius:2px;transition:all .3s;
-      border-bottom:2px solid transparent}
-  .ln.inked{border-bottom-color:var(--pen);background:rgba(196,59,46,.09)}
-  .exlab{display:inline-block;font:700 9.5px var(--sans);color:var(--paper);
-         background:var(--pen);border-radius:50%;width:15px;height:15px;
-         line-height:15px;text-align:center;position:relative;top:-5px;left:3px}
-  .streak{position:absolute;width:28px;height:4px;background:var(--label);
-          border-radius:2px;pointer-events:none;z-index:4;opacity:.9;
-          box-shadow:0 0 8px rgba(122,147,173,.55);will-change:transform}
-  .streak.red{background:var(--pen);height:5px;box-shadow:0 0 12px rgba(196,59,46,.8)}
-
-  .verdictrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-              gap:12px;margin-top:14px}
-  .ex{background:var(--paper);color:var(--ink);border-radius:3px;padding:13px 15px;
-      border-left:4px solid var(--pen);cursor:pointer}
-  .ex.fixedc{border-left-color:var(--grn)}
-  .ex.dismissedc{border-left-color:#B9AE93;opacity:.72}
-  .ex .tag{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-  .ex .let{font:700 12px var(--sans);color:var(--paper);background:var(--pen);
-           border-radius:50%;width:20px;height:20px;line-height:20px;
-           text-align:center;flex:none}
-  .ex .sev{font:700 10px var(--sans);letter-spacing:.13em;color:var(--pen)}
-  .ex .sev.t2{color:var(--amber)} .ex .sev.t3{color:#6B7431}
-  .ex h3{font:700 14.5px/1.3 var(--serif);margin:6px 0 4px;text-wrap:balance}
-  .ex .verdict{font:12.5px/1.5 var(--serif);color:#4A4438}
-  .ex .receipt{font:10.5px/1.5 var(--mono);color:#5C5546;background:var(--paper2);
-               border-left:2px solid #C9BFA6;padding:4px 8px;margin-top:7px}
-  .ex .receipt b{color:var(--pen);font-weight:600}
-  .ex .corr{font:10px var(--sans);letter-spacing:.04em;color:#7A7261;margin-top:6px}
-  .ex .corr .ok{color:var(--grn)}
-  .ex .actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-  .ex .actions button{font:600 11px var(--sans);border-radius:3px;padding:6px 12px;
-                      border:1px solid var(--ink);cursor:pointer;background:transparent}
-  .ex .actions .a{background:var(--ink);color:var(--paper)}
-  .ex .actions .d{color:#5C5546}
-  .ex .decided{font:600 11.5px var(--sans);margin-top:10px}
-  .ex .decided.ok{color:var(--grn)} .ex .decided.no{color:#7A7261}
-  .empty{color:#435364;font:12px var(--mono);padding:22px;text-align:center;
-         border:1px dashed var(--line);border-radius:3px;margin-top:14px}
-
-  .sealrow{display:flex;gap:18px;align-items:center;margin-top:14px;flex-wrap:wrap}
-  .seal{width:104px;height:104px;border-radius:50%;flex:none;position:relative;
-        display:none}
-  .seal.show{display:block}
-  .seal::after{content:"";position:absolute;inset:14px;border-radius:50%;
-               background:var(--panel)}
-  .seal .n{position:absolute;inset:0;display:flex;flex-direction:column;
-           align-items:center;justify-content:center;z-index:1;
-           font:700 16px var(--mono);color:#C8D2DC}
-  .seal .n small{font:8px var(--sans);letter-spacing:.12em;color:var(--label);
-                 text-transform:uppercase}
-  .finalstamp{display:none;font:700 13.5px var(--mono);letter-spacing:.11em;
-              color:var(--grn);border:2px solid var(--grn);border-radius:3px;
-              padding:11px 16px}
-  .finalstamp.bad{color:var(--pen);border-color:var(--pen)}
-  .finalstamp small{display:block;font:10px var(--mono);letter-spacing:.03em;
-                    color:var(--label);margin-top:5px}
-  .finalstamp.show{display:block}
-  .note{font:10.5px var(--mono);color:#435364;margin-top:12px}
+  body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+  /* patient banner */
+  .banner{background:var(--chrome);border-bottom:1px solid var(--line);
+          padding:10px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .banner .pt{font:700 16.5px var(--sans)}
+  .banner .demo{font:12px var(--sans);color:var(--mut)}
+  .banner .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  select{font:12.5px var(--sans);border:1px solid var(--line);border-radius:5px;
+         padding:6px 8px;background:#fff;color:var(--ink)}
+  .runbtn{font:700 13px var(--sans);letter-spacing:.04em;background:var(--pen);
+          border:1px solid var(--pen);color:#fff;border-radius:6px;
+          padding:9px 18px;cursor:pointer;min-width:210px}
+  .runbtn:hover{background:#AD3226}
+  .runbtn:disabled{opacity:.5;cursor:default}
+  .runbtn.rerun{background:#fff;color:var(--amber);border-color:var(--amber)}
+  button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  /* verify chip */
+  .chipbar{padding:8px 22px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+           font:12px var(--sans);color:var(--mut)}
+  #verifychip{display:none;background:var(--grnbg);border:1px solid #BFDCC8;
+              color:var(--grn);border-radius:14px;padding:3px 13px;font-weight:600}
+  #verifychip small{color:var(--mut);font-weight:400}
+  #residchip{display:none;background:var(--penbg);border:1px solid #E7C2BD;
+             color:var(--pen);border-radius:14px;padding:3px 13px;font-weight:600}
+  #findchip{display:none;background:var(--ambbg);border:1px solid #E4D2A8;
+            color:var(--amber);border-radius:14px;padding:3px 13px;font-weight:600}
+  #meter{margin-left:auto;font:11.5px var(--mono);color:var(--mut);
+         font-variant-numeric:tabular-nums}
+  /* note page */
+  .page{max-width:900px;margin:8px auto 80px;background:var(--paper);
+        border:1px solid var(--line);border-radius:8px;
+        box-shadow:0 2px 14px rgba(28,40,51,.07);padding:34px 44px;min-height:500px}
+  .page .doctitle{font:700 17px var(--serif);border-bottom:2px solid var(--ink);
+                  padding-bottom:8px;margin-bottom:6px}
+  .page .docsub{font:11px var(--sans);color:var(--mut);letter-spacing:.05em;
+                margin-bottom:14px}
+  .page h4{font:700 11.5px var(--sans);letter-spacing:.1em;color:var(--mut);
+           text-transform:uppercase;margin:16px 0 4px}
+  .ln{font:13.5px/1.7 var(--serif);padding:1px 3px;border-radius:2px;
+      transition:background .3s}
+  .ln.marked{background:var(--penbg);border-bottom:2px solid var(--pen);
+             cursor:pointer;position:relative}
+  .ln.marked:hover{background:#F7E2DF}
+  .ln.marked.resolved{background:var(--grnbg);border-bottom-color:var(--grn)}
+  .ln.marked.waived{background:#F2F4F6;border-bottom-color:#B9C4CE}
+  .exchip{display:inline-block;font:700 10px var(--sans);color:#fff;
+          background:var(--pen);border-radius:50%;width:16px;height:16px;
+          line-height:16px;text-align:center;margin-left:6px;position:relative;top:-2px}
+  .ln.marked.resolved .exchip{background:var(--grn)}
+  .ln.marked.waived .exchip{background:#9AA7B2}
+  .ins{font:13.5px/1.65 var(--serif);color:var(--grn);background:var(--grnbg);
+       border-left:3px solid var(--grn);padding:3px 10px;margin:4px 0;
+       border-radius:0 3px 3px 0;animation:insin .5s}
+  .ins .tag{font:700 9.5px var(--sans);letter-spacing:.1em;color:var(--grn);
+            display:block}
+  @keyframes insin{from{opacity:0;transform:translateY(-4px)}}
+  /* popover */
+  #pop{position:absolute;z-index:30;width:430px;max-width:92vw;background:#fff;
+       border:1px solid var(--line);border-top:3px solid var(--pen);border-radius:8px;
+       box-shadow:0 14px 40px rgba(28,40,51,.22);padding:15px 17px;display:none}
+  #pop.res{border-top-color:var(--grn)}
+  #pop .sev{font:700 10px var(--sans);letter-spacing:.12em;color:var(--pen)}
+  #pop .sev.t2{color:var(--amber)} #pop .sev.t3{color:#6B7431}
+  #pop h3{font:700 15px/1.3 var(--serif);margin:4px 0 5px;text-wrap:balance}
+  #pop .claim{font:13px/1.5 var(--serif);color:#3C4956}
+  #pop .conf{font:10.5px var(--sans);color:var(--mut);margin-top:6px}
+  #pop .conf b{color:var(--grn)}
+  #pop .rc{font:11px/1.5 var(--mono);color:#4A5866;background:#F4F6F8;
+           border-left:2px solid var(--line);padding:4px 8px;margin-top:7px}
+  #pop .rc b{color:var(--blue);font-weight:600}
+  #pop .ord{font:12px/1.5 var(--mono);background:#F2F6FB;border:1px solid #CFE0F2;
+            border-radius:5px;padding:8px 10px;margin-top:10px}
+  #pop .ord .lbl{font:700 9.5px var(--sans);letter-spacing:.12em;color:var(--blue);
+                 display:block;margin-bottom:3px}
+  #pop .acts{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+  #pop .acts button{font:600 12px var(--sans);border-radius:5px;padding:7px 13px;
+                    cursor:pointer;border:1px solid var(--line);background:#fff;
+                    color:var(--mut)}
+  #pop .acts .a{background:var(--blue);border-color:var(--blue);color:#fff}
+  #pop .chips{display:none;gap:6px;margin-top:8px;flex-wrap:wrap}
+  #pop .chips button{font:600 11px var(--sans);border-radius:12px;padding:4px 11px;
+                     border:1px solid var(--line);background:#fff;color:var(--mut);
+                     cursor:pointer}
+  #pop .chips button:hover{border-color:var(--mut);color:var(--ink)}
+  #pop .status{font:600 12px var(--sans);margin-top:10px}
+  #pop .status.ok{color:var(--grn)} #pop .status.no{color:var(--mut)}
+  #pop .x{position:absolute;top:8px;right:12px;color:var(--mut);cursor:pointer;
+          font-size:15px;background:none;border:0}
+  /* ceremony overlay */
+  #ceremony{position:fixed;inset:0;background:rgba(11,16,22,.82);z-index:50;
+            display:none;align-items:center;justify-content:center;padding:20px}
+  #ceremony.show{display:flex}
+  .cerecard{background:var(--room);border:1px solid #2E3C4D;border-radius:10px;
+            color:var(--roomtxt);width:640px;max-width:95vw;padding:22px 26px;
+            box-shadow:0 40px 120px rgba(0,0,0,.6)}
+  .cerecard .hd{font:700 13px var(--mono);letter-spacing:.16em;color:#EFE9DC;
+                text-transform:uppercase}
+  .cerecard .phase{font:11px var(--mono);letter-spacing:.1em;color:var(--amber);
+                   min-height:15px;margin:4px 0 14px}
+  .ceregrid{display:grid;grid-template-columns:1fr 150px;gap:18px}
+  .clane{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+         padding:3.5px 0;border-bottom:1px solid #1E2833}
+  .clane .nm{font:10.5px var(--sans);letter-spacing:.06em;color:#8FA1B2;
+             text-transform:uppercase}
+  .cagents{display:flex;gap:4px}
+  .cagent{width:12px;height:12px;border-radius:50%;background:#232E3A;
+          border:1px solid #2C3947;transition:all .3s}
+  .cagent.live{background:#3D4F61;border-color:#7A93AD;
+               box-shadow:0 0 6px rgba(122,147,173,.5)}
+  .cagent.obj{background:#4E4632;border-color:#D99A2B}
+  .cagent.dead{opacity:.3}
+  .cagent.surv{background:#C43B2E;border-color:#C43B2E;
+               box-shadow:0 0 8px rgba(196,59,46,.7)}
+  .cgate{text-align:center;border-left:1px dashed #4A607A;padding-left:16px}
+  .cgate .n{font:700 40px var(--mono);color:#C8D2DC;font-variant-numeric:tabular-nums}
+  .cgate .cap{font:9.5px var(--sans);letter-spacing:.14em;color:#7A93AD;
+              text-transform:uppercase}
+  .cgate .last{font:9.5px/1.5 var(--mono);color:#8FA1B2;margin-top:10px;
+               min-height:56px;text-align:left}
+  .cgate .last .test{color:#D99A2B}
+  .cerefoot{font:10px var(--mono);color:#5F7183;margin-top:14px}
+  footer{position:fixed;bottom:0;left:0;right:0;background:var(--chrome);
+         border-top:1px solid var(--line);padding:6px 22px;font:10.5px var(--sans);
+         color:var(--mut);display:flex;gap:14px;flex-wrap:wrap}
+  footer a{color:var(--mut)}
+  @media(prefers-reduced-motion:reduce){.ins{animation:none}.cagent{transition:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="wordmark">THE <span>GAUNTLET</span></div>
-    <div class="chip">PT <b id="pt">—</b></div>
-    <div class="chip">TARGET <b id="target">—</b></div>
-    <div class="modes">
-      <button id="mDis" class="on">DISCHARGE</button>
-      <button id="mAmb">AMBIENT / SUMMARY</button>
-    </div>
-  </div>
-
-  <div class="stage" id="stage">
-    <div class="stagehead">
-      <span class="stamp" id="runstamp">WAITING FOR A RUN</span>
-      <span class="runmeta" id="meter">0s · $0.00</span>
-      <button class="runbtn" id="run">▶ RUN THE GAUNTLET</button>
-    </div>
-    <div class="corridor">
-      <div class="field">
-        <div class="fieldhead" id="fieldhead">Attack field</div>
-        <div id="ambientctl" style="display:none">
-          <select id="enc">
-            <option value="covid-inpt">COVID inpatient admission</option>
-            <option value="annual-htn">General exam — new hypertension</option>
-            <option value="hospice-1">Hospice — end-stage colon cancer</option>
-            <option value="hospice-2">Hospice — colon cancer + cardiac</option>
-          </select>
-          <textarea id="summary" rows="5" placeholder="Optional: paste a discharge summary to attack against this encounter. Empty = attack its own note/AVS."></textarea>
-        </div>
-        <div id="lanes"></div>
-      </div>
-      <div class="gate">
-        <div class="gatehead">The Judge<b>four tests · default kill</b></div>
-        <div class="gatecount" id="gatecount"><span id="killn">0</span>
-          <small>refuted here</small></div>
-        <div class="gateledger" id="gateledger"></div>
-      </div>
-      <div class="doc" id="doc"><div class="docmeta">No document loaded — run the
-        gauntlet.</div></div>
-    </div>
-    <div class="verdictrow" id="verdicts"></div>
-    <div class="empty" id="emptymsg">No surviving objections yet.</div>
-    <div class="sealrow">
-      <div class="seal" id="seal"><div class="n"><span id="sealn">0</span>
-        <small>examined</small></div></div>
-      <div class="finalstamp" id="finalstamp"></div>
-    </div>
-    <div class="note">live agent runs — elapsed, cost, and every receipt are measured
-      and machine-verified verbatim; nothing on this page is simulated ·
-      <a href="/md" style="color:var(--label)">physician view</a> ·
-      <a href="/classic" style="color:var(--label)">classic log</a></div>
+<div class="banner">
+  <span class="pt" id="pt">—</span><span class="demo" id="ptdemo"></span>
+  <div class="right">
+    <select id="caseSel">
+      <option value="eleanor">Vance, Eleanor — discharge 07/16</option>
+      <option value="covid-inpt">COVID inpatient admission (organizer data)</option>
+      <option value="annual-htn">Annual exam — new HTN (organizer data)</option>
+      <option value="hospice-1">Hospice admission (organizer data)</option>
+    </select>
+    <button class="runbtn" id="run">▶ Run the Gauntlet</button>
   </div>
 </div>
+<div class="chipbar">
+  <span id="findchip"></span>
+  <span id="verifychip"></span>
+  <span id="residchip"></span>
+  <span id="meter">0s · $0.00</span>
+</div>
+
+<div class="page" id="page">
+  <div class="doctitle" id="doctitle">Discharge Summary</div>
+  <div class="docsub" id="docsub">Draft — not yet attacked</div>
+  <div id="doc"></div>
+</div>
+
+<div id="pop" role="dialog"><button class="x" id="popx">✕</button><div id="popbody"></div></div>
+
+<div id="ceremony"><div class="cerecard">
+  <div class="hd">THE GAUNTLET — <span id="cerecount">30</span> ADVERSARIAL REVIEWERS</div>
+  <div class="phase" id="cerephase">launching…</div>
+  <div class="ceregrid">
+    <div id="celanes"></div>
+    <div class="cgate">
+      <div class="n" id="ckilln">0</div>
+      <div class="cap">refuted by the judge<br>four tests · default kill</div>
+      <div class="last" id="clast"></div>
+    </div>
+  </div>
+  <div class="cerefoot">every number measured live · every receipt machine-verified
+    verbatim · findings appear in the note when review completes</div>
+</div></div>
+
+<footer>
+  <span>The Gauntlet — adversarial discharge review. Findings are reviewed arguments
+  with verbatim receipts, not certifications. The clinician decides everything;
+  dismissal rationales are recorded.</span>
+  <span style="margin-left:auto"><a href="/md">physician sheet</a> ·
+  <a href="/corridor">corridor</a> · <a href="/classic">classic</a></span>
+</footer>
 
 <script>
 const $ = id => document.getElementById(id);
-const stage = $('stage');
 let runDir = new URLSearchParams(location.search).get('run');
-let nLines = 0, meta = null, mode = 'discharge';
-let agents = {}, laneSeen = [], killn = 0, findings = [];
-let decisions = {}, fixSubmitted = false, sawFixEvents = false, docLoaded = false;
-let animQ = [], draining = false;
+let nLines = 0, meta = null, findings = [], decisions = {};
+let fixSubmitted = false, sawFixEvents = false, docLoaded = false;
+let cagents = {}, killn = 0, attackTotal = 0, running = false;
+let planSection = null, pinned = null;
 const LETTERS = 'ABCDEFGH';
 const norm = s => s.replace(/[—–−]/g, '-').replace(/[‘’]/g, "'")
                    .replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
 
+/* ---------- button ---------- */
 function setBtn(state) {
   const b = $('run');
-  const S = { idle: [false, '▶ RUN THE GAUNTLET', ''],
-    running: [true, 'RUNNING…', ''],
-    decide: [false, '▶ RUN THE GAUNTLET', ''],  // cards carry the decide affordance
-    fixing: [true, 'PLACING ORDERS…', ''],
-    rerun: [false, '⟳ RE-RUN THE GAUNTLET', 'rerun'],
-    rerunning: [true, 'RE-RUNNING…', 'rerun'] }[state];
+  const S = { idle: [false, '▶ Run the Gauntlet', ''],
+    running: [true, 'Running…', ''],
+    decide: [false, '▶ Run the Gauntlet', ''],
+    fixing: [true, 'Placing orders…', ''],
+    rerun: [false, '⟳ Re-run the Gauntlet', 'rerun'],
+    rerunning: [true, 'Re-running…', 'rerun'] }[state];
   b.disabled = S[0]; b.textContent = S[1];
   b.className = 'runbtn ' + S[2]; b.dataset.state = state;
 }
 
-/* ---------- corridor pieces ---------- */
-function ensureLane(lane) {
-  let row = document.querySelector(`[data-lane="${lane}"]`);
+/* ---------- ceremony ---------- */
+function ceremonyAgent(agent, lane) {
+  if (cagents[agent]) return cagents[agent];
+  let row = document.querySelector(`[data-clane="${lane}"] .cagents`);
   if (!row) {
-    laneSeen.push(lane);
-    row = document.createElement('div');
-    row.className = 'flane'; row.dataset.lane = lane;
-    row.innerHTML = `<div class="nm">${lane.replace(/-/g, ' ')}</div>
-      <div class="agents"></div>`;
-    $('lanes').appendChild(row);
+    const l = document.createElement('div');
+    l.className = 'clane'; l.dataset.clane = lane;
+    l.innerHTML = `<div class="nm">${lane.replace(/-/g, ' ')}</div><div class="cagents"></div>`;
+    $('celanes').appendChild(l);
+    row = l.querySelector('.cagents');
   }
-  return row.querySelector('.agents');
-}
-function agentDot(agent, lane) {
-  if (agents[agent]) return agents[agent];
   const d = document.createElement('i');
-  d.className = 'agent';
-  ensureLane(lane).appendChild(d);
-  agents[agent] = d;
+  d.className = 'cagent';
+  row.appendChild(d);
+  cagents[agent] = d;
   return d;
 }
-function fly(fromEl, toEl, red, dur, then) {
-  const s = stage.getBoundingClientRect();
-  const a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect();
-  const st = document.createElement('div');
-  st.className = 'streak' + (red ? ' red' : '');
-  const x0 = a.right - s.left, y0 = a.top - s.top + a.height / 2;
-  const dx = (b.left - s.left + 8) - x0, dy = (b.top - s.top + b.height / 2) - y0;
-  const ang = Math.atan2(dy, dx);
-  st.style.left = x0 + 'px'; st.style.top = y0 + 'px';
-  st.style.transform = `rotate(${ang}rad)`;
-  st.style.transition = `transform ${dur}ms linear`;  // compositor-friendly
-  stage.appendChild(st);
-  requestAnimationFrame(() =>
-    st.style.transform = `translate(${dx}px,${dy}px) rotate(${ang}rad)`);
-  setTimeout(() => { st.remove(); if (then) then(); }, dur + 40);
-}
-function gateLine(agent, test, why) {
-  killn++; $('killn').textContent = killn;
-  const d = document.createElement('div');
-  d.innerHTML = `<span class="test">${test}</span> ${agent} — ${(why || '').slice(0, 90)}`;
-  $('gateledger').prepend(d);
-}
-function queueAnim(fn) { animQ.push(fn); drain(); }
-function drain() {
-  if (draining) return;
-  draining = true;
-  const step = () => {
-    if (!animQ.length) { draining = false; return; }
-    // burst catch-up: if a replay dumped many events, skip streak theater
-    const fast = animQ.length > 12;
-    const fn = animQ.shift(); fn(fast);
-    setTimeout(step, fast ? 25 : 170);
-  };
-  step();
-}
+function ceremonyShow(on) { $('ceremony').classList.toggle('show', on); }
 
 /* ---------- document ---------- */
 async function loadDoc() {
@@ -295,27 +243,32 @@ async function loadDoc() {
   try {
     const txt = await fetch('/' + meta.chart).then(r => r.text());
     const stripped = txt.replace(/<!--[\s\S]*?-->/g, '');
-    const doc = $('doc'); doc.innerHTML = '';
+    const doc = $('doc'); doc.innerHTML = ''; planSection = null;
+    let inPlan = false;
     for (const raw of stripped.split('\n')) {
       const line = raw.trimEnd();
       if (!line.trim()) continue;
       if (line.startsWith('# ')) {
-        const d = document.createElement('div');
-        d.className = 'docmeta'; d.textContent = line.slice(2);
-        doc.appendChild(d);
-        $('pt').textContent = line.slice(2).split('(')[0]
-          .replace(/SYNTHETIC PATIENT CHART[ —-]*/i, '').slice(0, 40) || '—';
-      } else if (line.startsWith('## ')) {
-        const h = document.createElement('h4'); h.textContent = line.slice(3);
-        doc.appendChild(h);
-        if (/UNDER ATTACK/i.test(line))
-          $('target').textContent = line.slice(3)
-            .replace(/[—-]? ?THE (PLAN|DOCUMENTATION) UNDER ATTACK/i, '').slice(0, 46);
-      } else {
-        const d = document.createElement('div'); d.className = 'ln';
-        d.textContent = line.replace(/^[-*] /, '');
-        doc.appendChild(d);
+        const t = line.slice(2);
+        $('pt').textContent = t.replace(/SYNTHETIC PATIENT CHART[ —-]*/i, '')
+          .replace(/\(.*\)/, '').trim().slice(0, 44) || 'Patient';
+        $('ptdemo').textContent = /SYNTHETIC|FICTIONAL/i.test(t)
+          ? 'synthetic chart — demo data' : '';
+        continue;
       }
+      if (line.startsWith('## ')) {
+        const h = document.createElement('h4');
+        h.textContent = line.slice(3).replace(/[—-]? ?THE (PLAN|DOCUMENTATION) UNDER ATTACK/i,
+          ' — under review');
+        doc.appendChild(h);
+        inPlan = /UNDER ATTACK/i.test(line);
+        if (inPlan) planSection = h;
+        continue;
+      }
+      const d = document.createElement('div'); d.className = 'ln';
+      d.textContent = line.replace(/^[-*] /, '');
+      doc.appendChild(d);
+      if (inPlan) planSection = d;
     }
     docLoaded = true;
     inkMarks();
@@ -326,191 +279,217 @@ function inkMarks() {
   const lns = [...document.querySelectorAll('.ln')];
   findings.forEach((f, i) => {
     const letter = LETTERS[i] || '+';
+    if (document.querySelector(`.ln[data-ex="${letter}"]`)) return;
     for (const q of (f.quotes || []).slice(0, 2)) {
       const frag = norm(String((q.quote || '').split('...')[0]).slice(0, 80));
       if (frag.length < 8) continue;
-      const hit = lns.find(l => norm(l.textContent).includes(frag.slice(0, 60)));
-      if (hit && !hit.classList.contains('inked')) {
-        hit.classList.add('inked');
+      const hit = lns.find(l => !l.dataset.ex &&
+        norm(l.textContent).includes(frag.slice(0, 60)));
+      if (hit) {
+        hit.classList.add('marked');
         hit.dataset.ex = letter;
-        const lab = document.createElement('span');
-        lab.className = 'exlab'; lab.textContent = letter;
-        hit.appendChild(lab);
+        const c = document.createElement('span');
+        c.className = 'exchip'; c.textContent = letter;
+        hit.appendChild(c);
+        hit.onclick = ev => { ev.stopPropagation(); showPop(f, i, hit, true); };
+        hit.onmouseenter = () => { if (!pinned) showPop(f, i, hit, false); };
+        break;  // one anchor per finding — rare, heavy marks
       }
     }
+    applyState(f, i);
   });
+  $('docsub').textContent = findings.length
+    ? `${findings.length} finding(s) survived adversarial review — click a highlight`
+    : $('docsub').textContent;
+}
+function applyState(f, i) {
+  const el = document.querySelector(`.ln[data-ex="${LETTERS[i]}"]`);
+  if (!el) return;
+  el.classList.remove('resolved', 'waived');
+  const d = decisions[f.id] || (sawFixEvents ? f._state : null);
+  if (d === 'fix' || f._state === 'fixed') el.classList.add('resolved');
+  else if ((d || '').startsWith('dismiss') || f._state === 'dismissed')
+    el.classList.add('waived');
 }
 
-/* ---------- exhibits ---------- */
+/* ---------- popover ---------- */
+function showPop(f, i, anchor, pin) {
+  pinned = pin ? f.id : pinned;
+  const sevCls = f.tier === 2 ? 't2' : f.tier === 3 ? 't3' : '';
+  const decided = decisions[f.id] || f._state;
+  const single = f.found_by === 1 ? ' · single-source, gate-confirmed' : '';
+  let acts;
+  if (f._state === 'fixed') acts =
+    `<div class="status ok">✓ Orders placed — unverified until re-run</div>`;
+  else if (f._state === 'dismissed') acts =
+    `<div class="status no">✗ Dismissed — “${f._why || 'rationale recorded'}”</div>`;
+  else if (decided === 'fix') acts =
+    `<div class="status ok">✓ Accepted — order staged; transmits when all findings are decided</div>`;
+  else if ((decided || '').startsWith('dismiss')) acts =
+    `<div class="status no">✗ Dismissed — recorded</div>`;
+  else acts =
+    `<div class="acts"><button class="a" id="pacc">Accept — stage order</button>
+     <button id="pdis">Dismiss…</button></div>
+     <div class="chips" id="pchips">
+       <button data-r="clinically addressed">clinically addressed</button>
+       <button data-r="known to me — monitoring in place">known — monitored</button>
+       <button data-r="disagree with the evidence">disagree w/ evidence</button></div>`;
+  $('popbody').innerHTML =
+    `<span class="sev ${sevCls}">${f.tier_label || ''}</span>
+     <h3>${f.title}</h3>
+     <div class="claim">${f.claim || ''}</div>
+     <div class="conf">found independently by ${f.found_by} of ${attackTotal || 30}${single}
+       · <b>receipts machine-verified ✓</b> · ${f.citation || ''}</div>` +
+    (f.quotes || []).slice(0, 2).map(q =>
+      `<div class="rc"><b>${q.section}</b> — “${(q.quote || '').slice(0, 100)}”</div>`).join('') +
+    `<div class="ord"><span class="lbl">STAGED ORDER</span>${f.proposed_order || ''}</div>` + acts;
+  const pop = $('pop');
+  pop.className = (f._state === 'fixed' || decided === 'fix') ? 'res' : '';
+  pop.style.display = 'block';
+  const r = anchor.getBoundingClientRect();
+  const top = r.bottom + window.scrollY + 6;
+  let left = r.left + window.scrollX;
+  left = Math.min(left, window.scrollX + document.documentElement.clientWidth - 450);
+  pop.style.top = top + 'px'; pop.style.left = Math.max(8, left) + 'px';
+  const acc = $('pacc'), dis = $('pdis');
+  if (acc) acc.onclick = () => decide(f, i, 'fix');
+  if (dis) dis.onclick = () => { $('pchips').style.display = 'flex'; };
+  document.querySelectorAll('#pchips button').forEach(b =>
+    b.onclick = () => decide(f, i, 'dismiss:' + b.dataset.r));
+}
+$('popx').onclick = () => { $('pop').style.display = 'none'; pinned = null; };
+document.addEventListener('click', e => {
+  if (!$('pop').contains(e.target) && !e.target.classList.contains('marked'))
+    { $('pop').style.display = 'none'; pinned = null; }
+});
+function decide(f, i, d) {
+  if (fixSubmitted || sawFixEvents) return;
+  decisions[f.id] = d;
+  applyState(f, i);
+  showPop(f, i, document.querySelector(`.ln[data-ex="${LETTERS[i]}"]`) || $('page'), true);
+  maybeSubmitFix();
+}
 function maybeSubmitFix() {
   if (fixSubmitted || sawFixEvents || !findings.length) return;
   if (findings.some(f => !decisions[f.id])) return;
   fixSubmitted = true;
   setBtn('fixing');
+  $('pop').style.display = 'none'; pinned = null;
   const dismiss = findings.filter(f => decisions[f.id].startsWith('dismiss'))
-    .map(f => ({ id: f.id, rationale: 'clinician judgment — no order tonight' }));
+    .map(f => ({ id: f.id, rationale: decisions[f.id].slice(8) || 'clinician judgment' }));
   fetch('/api/fix', { method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ run: runDir, dismiss }) }).catch(() => {});
 }
-function exhibit(f, i) {
-  const el = document.createElement('div');
-  el.className = 'ex'; el.id = 'card-' + f.id;
-  const letter = LETTERS[i] || '+';
-  const sevCls = f.tier === 1 ? '' : f.tier === 2 ? 't2' : 't3';
-  const lane = (f.members && f.members[0] || '').split('#')[0].replace(/-/g, ' ');
-  const single = f.found_by === 1 ? ' · single-source, gate-confirmed' : '';
-  el.innerHTML =
-    `<div class="tag"><span class="let">${letter}</span>
-      <span class="sev ${sevCls}">${f.tier_label || ''}</span></div>` +
-    `<h3>${f.title}</h3>` +
-    `<div class="verdict">${f.claim || ''}</div>` +
-    (f.quotes || []).slice(0, 2).map(q =>
-      `<div class="receipt"><b>${q.section}</b> — “${(q.quote || '').slice(0, 110)}”</div>`).join('') +
-    `<div class="corr">launched from ${lane.toUpperCase()} · found by ${f.found_by} of ` +
-    `${window.attackTotal || 30}${single} · <span class="ok">receipts machine-verified ✓</span>` +
-    ` · ${f.citation || ''}</div>` +
-    `<div class="actions"><button class="a">PLACE ORDERS</button>` +
-    `<button class="d">DISMISS — DOCUMENT RATIONALE</button></div>`;
-  el.onclick = e => {
-    if (e.target.tagName === 'BUTTON') return;
-    const mk = document.querySelector(`.ln[data-ex="${letter}"]`);
-    if (mk) { mk.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
-  };
-  el.querySelector('.a').onclick = () => {
-    if (fixSubmitted || sawFixEvents) return;
-    decisions[f.id] = 'fix';
-    el.classList.add('fixedc');
-    el.querySelector('.actions').innerHTML =
-      '<span class="decided ok">✓ orders queued — transmit on decision-complete</span>';
-    maybeSubmitFix();
-  };
-  el.querySelector('.d').onclick = () => {
-    if (fixSubmitted || sawFixEvents) return;
-    decisions[f.id] = 'dismiss';
-    el.classList.add('dismissedc');
-    el.querySelector('.actions').innerHTML =
-      '<span class="decided no">✗ dismissed — rationale documented</span>';
-    maybeSubmitFix();
-  };
-  return el;
-}
+
+/* ---------- findings ---------- */
 async function loadFindings() {
   try {
     findings = await fetch('/' + runDir + '/findings.json').then(r => r.json());
-    $('verdicts').innerHTML = '';
-    $('emptymsg').style.display = findings.length ? 'none' : 'block';
-    $('emptymsg').textContent = findings.length ? '' : 'Nothing survived review.';
-    findings.forEach((f, i) => $('verdicts').appendChild(exhibit(f, i)));
+    ceremonyShow(false);
+    if (!findings.length) {
+      $('docsub').textContent = 'Nothing survived adversarial review.';
+      setBtn('idle');
+      return;
+    }
+    $('findchip').style.display = 'inline-block';
+    $('findchip').textContent =
+      `${findings.length} findings — each needs a decision`;
     inkMarks();
-    if (findings.length && !sawFixEvents) setBtn('decide');
-    if (!findings.length) setBtn('idle');
+    if (!sawFixEvents) setBtn('decide');
   } catch (err) {}
 }
-function stripActions(id, html, cls) {
-  const c = $('card-' + id); if (!c) return;
-  if (cls) c.classList.add(cls);
-  const a = c.querySelector('.actions'); if (a) a.innerHTML = html;
-}
-
-/* ---------- seal ---------- */
-function showSeal() {
-  const n = laneSeen.length || 1;
-  const hitLanes = new Set(findings.map(f =>
-    (f.members && f.members[0] || '').split('#')[0]));
-  // hairline separators so the ring reads as N examined sectors, not a donut chart
-  const w = 360 / n, gap = Math.min(1.6, w * 0.08);
-  const segs = laneSeen.map((ln, i) => {
-    const c = hitLanes.has(ln) ? 'var(--pen)' : '#3D5169';
-    return `var(--panel) ${i * w}deg ${i * w + gap}deg, ` +
-           `${c} ${i * w + gap}deg ${(i + 1) * w}deg`;
-  });
-  $('seal').style.background = `conic-gradient(${segs.join(',')})`;
-  $('sealn').textContent = window.attackTotal || Object.keys(agents).length;
-  $('seal').classList.add('show');
+function insertOrder(text) {
+  const d = document.createElement('div');
+  d.className = 'ins';
+  d.innerHTML = `<span class="tag">+ ORDER ADDED BY CLINICIAN</span>${text}`;
+  if (planSection && planSection.parentNode)
+    planSection.parentNode.insertBefore(d, planSection.nextSibling);
+  else $('doc').appendChild(d);
+  planSection = d;
 }
 
 /* ---------- events ---------- */
 function handle(e) {
   switch (e.type) {
     case 'attack_begin':
-      if (!window.attackTotal) window.attackTotal = e.agents;
-      $('lanes').innerHTML = ''; agents = {}; laneSeen = [];
-      killn = 0; $('killn').textContent = 0; $('gateledger').innerHTML = '';
-      $('fieldhead').textContent =
-        `Attack field — ${e.lanes} dimensions × ${Math.round(e.agents / e.lanes)} examiners`;
+      if (!attackTotal) attackTotal = e.agents;
+      $('celanes').innerHTML = ''; cagents = {};
+      killn = 0; $('ckilln').textContent = 0; $('clast').innerHTML = '';
+      $('cerecount').textContent = e.agents;
+      $('cerephase').textContent =
+        `attack — ${e.agents} reviewers across ${e.lanes} dimensions · chart prefix cached`;
+      if (running) ceremonyShow(true);
       break;
-    case 'attacker_start':
-      queueAnim(() => agentDot(e.agent, e.lane).classList.add('live'));
+    case 'attacker_start': ceremonyAgent(e.agent, e.lane).classList.add('live'); break;
+    case 'objection': { const d = ceremonyAgent(e.agent, e.lane);
+      d.className = 'cagent obj'; d.title = e.claim || ''; break; }
+    case 'no_objection': ceremonyAgent(e.agent, e.lane).className = 'cagent dead'; break;
+    case 'judge_begin':
+      $('cerephase').textContent =
+        `judge — ${e.objections} objections · four tests · default kill`;
       break;
-    case 'objection':
-      queueAnim(() => { const d = agentDot(e.agent, e.lane);
-        d.className = 'agent obj'; d.title = e.claim || ''; });
+    case 'gate_begin':
+      $('cerephase').textContent =
+        `confirmation gate — ${e.candidates} single-source candidate(s)`;
       break;
-    case 'no_objection':
-      queueAnim(() => { agentDot(e.agent, e.lane).className = 'agent dead'; });
+    case 'killed': {
+      ceremonyAgent(e.agent, e.lane).className = 'cagent dead';
+      killn++; $('ckilln').textContent = killn;
+      $('clast').innerHTML =
+        `<span class="test">${e.test}</span> ${(e.why || '').slice(0, 110)}`;
+      break; }
+    case 'survivor': ceremonyAgent(e.agent, e.lane).className = 'cagent surv'; break;
+    case 'cluster_done':
+      $('cerephase').textContent = `${e.findings} distinct finding(s) — verifying receipts…`;
       break;
-    case 'killed':
-      queueAnim(fast => {
-        const d = agentDot(e.agent, e.lane);
-        if (fast) { d.className = 'agent dead'; gateLine(e.agent, e.test, e.why); }
-        else fly(d, $('gatecount'), false, 380, () => {
-          d.className = 'agent dead'; gateLine(e.agent, e.test, e.why); });
-        d.title = e.why || '';
-      });
-      break;
-    case 'survivor':
-      queueAnim(fast => {
-        const d = agentDot(e.agent, e.lane);
-        d.className = 'agent surv';
-        if (!fast) fly(d, $('gatecount'), true, 300, () =>
-          fly($('gatecount'), $('doc'), true, 360));
-      });
-      break;
-    case 'cluster_done': case 'receipts_enforced': loadFindings(); break;
+    case 'receipts_enforced': loadFindings(); break;
     case 'meter':
-      $('meter').textContent = `${e.t.toFixed(0)}s · $${e.cost.toFixed(2)} — real, measured`;
+      $('meter').textContent = `${e.t.toFixed(0)}s · $${e.cost.toFixed(2)} — measured`;
       break;
-    case 'order_emitted':
+    case 'order_emitted': {
       sawFixEvents = true;
-      stripActions(e.finding,
-        '<span class="decided ok">✓ order placed by clinician — unverified until re-run</span>',
-        'fixedc');
-      break;
-    case 'covered':
+      insertOrder(e.order);
+      const f = findings.find(x => x.id === e.finding);
+      if (f) { f._state = 'fixed'; applyState(f, findings.indexOf(f)); }
+      break; }
+    case 'covered': {
       sawFixEvents = true;
-      stripActions(e.finding,
-        '<span class="decided ok">✓ covered by orders already placed</span>', 'fixedc');
-      break;
-    case 'dismissed':
+      const f = findings.find(x => x.id === e.finding);
+      if (f) { f._state = 'fixed'; applyState(f, findings.indexOf(f)); }
+      break; }
+    case 'dismissed': {
       sawFixEvents = true;
-      stripActions(e.finding,
-        `<span class="decided no">✗ dismissed — “${e.rationale}” (recorded)</span>`,
-        'dismissedc');
-      break;
+      const f = findings.find(x => x.id === e.finding);
+      if (f) { f._state = 'dismissed'; f._why = e.rationale;
+        applyState(f, findings.indexOf(f)); }
+      break; }
     case 'amendment_written':
+      $('findchip').textContent = `plan amended — ${e.orders} orders · not yet re-verified`;
       if (meta) meta.chart = runDir + '/amended-chart.md';
-      docLoaded = false; loadDoc();
       setBtn('rerun');
       break;
     case 'reverify_begin':
+      running = true;
       setBtn('rerunning');
       break;
     case 'banner': {
-      if (animQ.length) { setTimeout(() => handle(e), 400); return; }  // let the gate count settle
+      ceremonyShow(false); running = false;
       const stats = (e.text.split(' — ')[1] || '')
         .replace(/ ?· attacked and not broken/, '');
-      $('finalstamp').className = 'finalstamp show';
-      $('finalstamp').innerHTML = `0 SURVIVING OBJECTIONS — ${stats}
-        <small>${killn} refuted at the gate · every receipt machine-verified verbatim ·
-        attacked and not broken — not a safety certification</small>`;
-      showSeal();
+      $('verifychip').style.display = 'inline-block';
+      $('verifychip').innerHTML = `0 surviving objections — ${stats}
+        <small>· attacked and not broken · not a safety certification</small>`;
+      $('findchip').style.display = 'none';
+      $('docsub').textContent =
+        `Re-verified against the amended plan — nothing survived. Not a safety certification.`;
       setBtn('idle');
       break; }
     case 'residual_gaps':
-      $('finalstamp').className = 'finalstamp bad show';
-      $('finalstamp').innerHTML = `${e.count} OBJECTION(S) SURVIVED THE GATE
-        <small>the fix was incomplete — that is the product working</small>`;
+      ceremonyShow(false); running = false;
+      $('residchip').style.display = 'inline-block';
+      $('residchip').textContent =
+        `${e.count} objection(s) survived re-verification — the fix was incomplete`;
       setBtn('rerun');
       break;
   }
@@ -520,38 +499,31 @@ function handle(e) {
 $('run').onclick = async () => {
   const state = $('run').dataset.state || 'idle';
   if (state === 'rerun') {
-    setBtn('rerunning');
+    running = true; setBtn('rerunning');
     await fetch('/api/reverify', { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ run: runDir }) }).catch(() => setBtn('rerun'));
     return;
   }
-  setBtn('running');
-  const body = mode === 'discharge' ? { target: 'eleanor' }
-    : { encounter: $('enc').value, summary: $('summary').value };
+  running = true; setBtn('running');
+  const c = $('caseSel').value;
+  const body = c === 'eleanor' ? { target: 'eleanor' } : { encounter: c };
   await fetch('/api/attack', { method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body) }).catch(() => setBtn('idle'));
+    body: JSON.stringify(body) }).catch(() => { setBtn('idle'); running = false; });
 };
-$('mDis').onclick = () => { mode = 'discharge';
-  $('mDis').className = 'on'; $('mAmb').className = '';
-  $('ambientctl').style.display = 'none'; };
-$('mAmb').onclick = () => { mode = 'ambient';
-  $('mAmb').className = 'on'; $('mDis').className = '';
-  $('ambientctl').style.display = 'block'; };
 
 function resetView() {
-  nLines = 0; meta = null; agents = {}; laneSeen = []; killn = 0;
-  findings = []; decisions = {}; fixSubmitted = false; sawFixEvents = false;
-  docLoaded = false; animQ = []; window.attackTotal = 0;
-  $('lanes').innerHTML = ''; $('gateledger').innerHTML = '';
-  $('killn').textContent = '0'; $('verdicts').innerHTML = '';
-  $('emptymsg').style.display = 'block';
-  $('emptymsg').textContent = 'No surviving objections yet.';
-  $('doc').innerHTML = '<div class="docmeta">Loading document…</div>';
-  $('seal').classList.remove('show'); $('finalstamp').classList.remove('show');
+  nLines = 0; meta = null; findings = []; decisions = {};
+  fixSubmitted = false; sawFixEvents = false; docLoaded = false;
+  cagents = {}; killn = 0; attackTotal = 0; pinned = null;
+  $('doc').innerHTML = ''; $('celanes').innerHTML = '';
+  $('ckilln').textContent = '0'; $('clast').innerHTML = '';
+  $('pop').style.display = 'none';
+  $('verifychip').style.display = 'none'; $('residchip').style.display = 'none';
+  $('findchip').style.display = 'none';
   $('meter').textContent = '0s · $0.00';
-  $('runstamp').textContent = runDir.replace('runs/', '').toUpperCase();
+  $('docsub').textContent = 'Draft — not yet attacked';
 }
 async function latest() {
   if (runDir && nLines === 0 && !meta) return runDir;
@@ -565,7 +537,8 @@ async function poll() {
     if (!meta) {
       meta = await fetch('/' + runDir + '/meta.json').then(r => r.json()).catch(() => null);
       if (meta) {
-        if (meta.encounter) $('target').textContent = meta.encounter.slice(0, 46);
+        $('doctitle').textContent = meta.encounter
+          ? meta.encounter : 'Discharge Summary — Vance, Eleanor';
         loadDoc();
       }
     }

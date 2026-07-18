@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE GAUNTLET — the corridor</title>
+<style>
+  :root{
+    --room:#10151B; --panel:#1E2731; --line:#2E3C4D; --label:#7A93AD;
+    --paper:#F4EFE4; --paper2:#EDE6D6; --ink:#232019; --faint:#8A8474;
+    --pen:#C43B2E; --amber:#D99A2B; --grn:#2E7D4F;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --serif:Charter,Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0}
+  html{background:var(--room)}
+  body{background:var(--room);color:#C8D2DC;font:14px/1.5 var(--sans)}
+  .wrap{max-width:1280px;margin:0 auto;padding:18px 22px 50px}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .wordmark{font:700 17px var(--mono);letter-spacing:.18em;color:#EFE9DC}
+  .wordmark span{color:var(--pen)}
+  .chip{font:11px var(--mono);color:var(--label);border:1px solid var(--line);
+        border-radius:3px;padding:4px 9px;background:var(--panel)}
+  .chip b{color:#D7DEE5;font-weight:600}
+  .modes{margin-left:auto;display:flex;border:1px solid var(--line);
+         border-radius:3px;overflow:hidden}
+  .modes button{font:11px var(--mono);letter-spacing:.1em;background:var(--panel);
+                color:var(--label);border:0;padding:6px 12px;cursor:pointer}
+  .modes button.on{background:#EFE9DC;color:var(--room);font-weight:700}
+  button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+
+  .stage{border:1px solid var(--line);border-radius:6px;background:var(--panel);
+         padding:16px;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative}
+  .stagehead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .stamp{font:700 10.5px var(--sans);letter-spacing:.18em;color:var(--room);
+         background:#EFE9DC;padding:4px 10px;border-radius:2px}
+  .runmeta{font:11px var(--mono);color:var(--label);font-variant-numeric:tabular-nums}
+  .runbtn{margin-left:auto;font:700 12px var(--mono);letter-spacing:.13em;
+          color:var(--pen);background:transparent;border:1px solid var(--pen);
+          border-radius:3px;padding:8px 16px;cursor:pointer;min-width:250px}
+  .runbtn:hover{background:rgba(196,59,46,.1)}
+  .runbtn:disabled{opacity:.4;cursor:default}
+  .runbtn.rerun{color:var(--amber);border-color:var(--amber)}
+
+  .corridor{display:grid;grid-template-columns:216px 190px 1fr;gap:0;position:relative}
+  @media(max-width:940px){.corridor{grid-template-columns:1fr}
+    .gate{border:0!important;border-top:1px dashed var(--line)!important;
+          border-bottom:1px dashed var(--line)!important}}
+  .field{padding-right:14px;min-height:340px}
+  .fieldhead{font:10.5px var(--mono);letter-spacing:.18em;color:var(--label);
+             text-transform:uppercase;margin-bottom:8px}
+  #ambientctl{margin-bottom:10px}
+  #ambientctl select,#ambientctl textarea{width:100%;background:var(--room);
+    color:#C8D2DC;border:1px solid var(--line);border-radius:3px;padding:6px;
+    font:11px var(--mono);margin-bottom:6px}
+  .flane{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;
+         padding:4.5px 0;border-bottom:1px solid #1E2833}
+  .flane .nm{font:11px var(--sans);letter-spacing:.07em;color:#8FA1B2;
+             text-transform:uppercase;white-space:nowrap;overflow:hidden;
+             text-overflow:ellipsis}
+  .agents{display:flex;gap:4px}
+  .agent{width:13px;height:13px;border-radius:50%;background:#232E3A;
+         border:1px solid #2C3947;transition:all .3s}
+  .agent.live{background:#3D4F61;border-color:var(--label);
+              box-shadow:0 0 6px rgba(122,147,173,.5)}
+  .agent.obj{background:#4E4632;border-color:var(--amber)}
+  .agent.dead{background:#1B242E;border-color:transparent;opacity:.45}
+  .agent.surv{background:var(--pen);border-color:var(--pen);
+              box-shadow:0 0 8px rgba(196,59,46,.6)}
+
+  .gate{border-left:1px dashed #4A607A;border-right:1px dashed #4A607A;
+        padding:0 10px;display:flex;flex-direction:column;min-height:340px}
+  .gatehead{font:10.5px var(--mono);letter-spacing:.18em;color:var(--label);
+            text-transform:uppercase;text-align:center}
+  .gatehead b{display:block;font:700 9.5px var(--sans);letter-spacing:.1em;
+              color:#5F7183;margin-top:2px}
+  .gatecount{font:700 34px var(--mono);color:#C8D2DC;text-align:center;
+             padding:8px 0 2px;font-variant-numeric:tabular-nums}
+  .gatecount small{display:block;font:9px var(--sans);letter-spacing:.14em;
+                   color:#7A93AD;text-transform:uppercase}
+  .gateledger{flex:1;overflow-y:auto;font:11px/1.55 var(--mono);color:#8FA1B2;
+              max-height:420px}
+  .gateledger div{padding:3px 0;border-bottom:1px dotted #2A3B4D}
+  .gateledger .test{color:var(--amber)}
+
+  .doc{background:var(--paper);color:var(--ink);border-radius:0 3px 3px 0;
+       padding:18px 20px;font:11.5px/1.65 var(--mono);
+       box-shadow:0 0 0 1px #D8CFBB inset,0 0 60px rgba(244,239,228,.12);
+       max-height:470px;overflow-y:auto}
+  .doc .docmeta{font-size:10px;color:var(--faint);letter-spacing:.06em;
+                border-bottom:1px solid #D8CFBB;padding-bottom:6px;margin-bottom:9px}
+  .doc h4{font:700 10px var(--sans);letter-spacing:.14em;color:var(--faint);
+          margin:11px 0 3px}
+  .ln{padding:1px 2px;border-radius:2px;transition:all .3s;
+      border-bottom:2px solid transparent}
+  .ln.inked{border-bottom-color:var(--pen);background:rgba(196,59,46,.09)}
+  .exlab{display:inline-block;font:700 9.5px var(--sans);color:var(--paper);
+         background:var(--pen);border-radius:50%;width:15px;height:15px;
+         line-height:15px;text-align:center;position:relative;top:-5px;left:3px}
+  .streak{position:absolute;width:28px;height:4px;background:var(--label);
+          border-radius:2px;pointer-events:none;z-index:4;opacity:.9;
+          box-shadow:0 0 8px rgba(122,147,173,.55);will-change:transform}
+  .streak.red{background:var(--pen);height:5px;box-shadow:0 0 12px rgba(196,59,46,.8)}
+
+  .verdictrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+              gap:12px;margin-top:14px}
+  .ex{background:var(--paper);color:var(--ink);border-radius:3px;padding:13px 15px;
+      border-left:4px solid var(--pen);cursor:pointer}
+  .ex.fixedc{border-left-color:var(--grn)}
+  .ex.dismissedc{border-left-color:#B9AE93;opacity:.72}
+  .ex .tag{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .ex .let{font:700 12px var(--sans);color:var(--paper);background:var(--pen);
+           border-radius:50%;width:20px;height:20px;line-height:20px;
+           text-align:center;flex:none}
+  .ex .sev{font:700 10px var(--sans);letter-spacing:.13em;color:var(--pen)}
+  .ex .sev.t2{color:var(--amber)} .ex .sev.t3{color:#6B7431}
+  .ex h3{font:700 14.5px/1.3 var(--serif);margin:6px 0 4px;text-wrap:balance}
+  .ex .verdict{font:12.5px/1.5 var(--serif);color:#4A4438}
+  .ex .receipt{font:10.5px/1.5 var(--mono);color:#5C5546;background:var(--paper2);
+               border-left:2px solid #C9BFA6;padding:4px 8px;margin-top:7px}
+  .ex .receipt b{color:var(--pen);font-weight:600}
+  .ex .corr{font:10px var(--sans);letter-spacing:.04em;color:#7A7261;margin-top:6px}
+  .ex .corr .ok{color:var(--grn)}
+  .ex .actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .ex .actions button{font:600 11px var(--sans);border-radius:3px;padding:6px 12px;
+                      border:1px solid var(--ink);cursor:pointer;background:transparent}
+  .ex .actions .a{background:var(--ink);color:var(--paper)}
+  .ex .actions .d{color:#5C5546}
+  .ex .decided{font:600 11.5px var(--sans);margin-top:10px}
+  .ex .decided.ok{color:var(--grn)} .ex .decided.no{color:#7A7261}
+  .empty{color:#435364;font:12px var(--mono);padding:22px;text-align:center;
+         border:1px dashed var(--line);border-radius:3px;margin-top:14px}
+
+  .sealrow{display:flex;gap:18px;align-items:center;margin-top:14px;flex-wrap:wrap}
+  .seal{width:104px;height:104px;border-radius:50%;flex:none;position:relative;
+        display:none}
+  .seal.show{display:block}
+  .seal::after{content:"";position:absolute;inset:14px;border-radius:50%;
+               background:var(--panel)}
+  .seal .n{position:absolute;inset:0;display:flex;flex-direction:column;
+           align-items:center;justify-content:center;z-index:1;
+           font:700 16px var(--mono);color:#C8D2DC}
+  .seal .n small{font:8px var(--sans);letter-spacing:.12em;color:var(--label);
+                 text-transform:uppercase}
+  .finalstamp{display:none;font:700 13.5px var(--mono);letter-spacing:.11em;
+              color:var(--grn);border:2px solid var(--grn);border-radius:3px;
+              padding:11px 16px}
+  .finalstamp.bad{color:var(--pen);border-color:var(--pen)}
+  .finalstamp small{display:block;font:10px var(--mono);letter-spacing:.03em;
+                    color:var(--label);margin-top:5px}
+  .finalstamp.show{display:block}
+  .note{font:10.5px var(--mono);color:#435364;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="wordmark">THE <span>GAUNTLET</span></div>
+    <div class="chip">PT <b id="pt">—</b></div>
+    <div class="chip">TARGET <b id="target">—</b></div>
+    <div class="modes">
+      <button id="mDis" class="on">DISCHARGE</button>
+      <button id="mAmb">AMBIENT / SUMMARY</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="stagehead">
+      <span class="stamp" id="runstamp">WAITING FOR A RUN</span>
+      <span class="runmeta" id="meter">0s · $0.00</span>
+      <button class="runbtn" id="run">▶ RUN THE GAUNTLET</button>
+    </div>
+    <div class="corridor">
+      <div class="field">
+        <div class="fieldhead" id="fieldhead">Attack field</div>
+        <div id="ambientctl" style="display:none">
+          <select id="enc">
+            <option value="covid-inpt">COVID inpatient admission</option>
+            <option value="annual-htn">General exam — new hypertension</option>
+            <option value="hospice-1">Hospice — end-stage colon cancer</option>
+            <option value="hospice-2">Hospice — colon cancer + cardiac</option>
+          </select>
+          <textarea id="summary" rows="5" placeholder="Optional: paste a discharge summary to attack against this encounter. Empty = attack its own note/AVS."></textarea>
+        </div>
+        <div id="lanes"></div>
+      </div>
+      <div class="gate">
+        <div class="gatehead">The Judge<b>four tests · default kill</b></div>
+        <div class="gatecount" id="gatecount"><span id="killn">0</span>
+          <small>refuted here</small></div>
+        <div class="gateledger" id="gateledger"></div>
+      </div>
+      <div class="doc" id="doc"><div class="docmeta">No document loaded — run the
+        gauntlet.</div></div>
+    </div>
+    <div class="verdictrow" id="verdicts"></div>
+    <div class="empty" id="emptymsg">No surviving objections yet.</div>
+    <div class="sealrow">
+      <div class="seal" id="seal"><div class="n"><span id="sealn">0</span>
+        <small>examined</small></div></div>
+      <div class="finalstamp" id="finalstamp"></div>
+    </div>
+    <div class="note">live agent runs — elapsed, cost, and every receipt are measured
+      and machine-verified verbatim; nothing on this page is simulated ·
+      <a href="/md" style="color:var(--label)">physician view</a> ·
+      <a href="/classic" style="color:var(--label)">classic log</a></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const stage = $('stage');
+let runDir = new URLSearchParams(location.search).get('run');
+let nLines = 0, meta = null, mode = 'discharge';
+let agents = {}, laneSeen = [], killn = 0, findings = [];
+let decisions = {}, fixSubmitted = false, sawFixEvents = false, docLoaded = false;
+let animQ = [], draining = false;
+const LETTERS = 'ABCDEFGH';
+const norm = s => s.replace(/[—–−]/g, '-').replace(/[‘’]/g, "'")
+                   .replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
+
+function setBtn(state) {
+  const b = $('run');
+  const S = { idle: [false, '▶ RUN THE GAUNTLET', ''],
+    running: [true, 'RUNNING…', ''],
+    decide: [false, '▶ RUN THE GAUNTLET', ''],  // cards carry the decide affordance
+    fixing: [true, 'PLACING ORDERS…', ''],
+    rerun: [false, '⟳ RE-RUN THE GAUNTLET', 'rerun'],
+    rerunning: [true, 'RE-RUNNING…', 'rerun'] }[state];
+  b.disabled = S[0]; b.textContent = S[1];
+  b.className = 'runbtn ' + S[2]; b.dataset.state = state;
+}
+
+/* ---------- corridor pieces ---------- */
+function ensureLane(lane) {
+  let row = document.querySelector(`[data-lane="${lane}"]`);
+  if (!row) {
+    laneSeen.push(lane);
+    row = document.createElement('div');
+    row.className = 'flane'; row.dataset.lane = lane;
+    row.innerHTML = `<div class="nm">${lane.replace(/-/g, ' ')}</div>
+      <div class="agents"></div>`;
+    $('lanes').appendChild(row);
+  }
+  return row.querySelector('.agents');
+}
+function agentDot(agent, lane) {
+  if (agents[agent]) return agents[agent];
+  const d = document.createElement('i');
+  d.className = 'agent';
+  ensureLane(lane).appendChild(d);
+  agents[agent] = d;
+  return d;
+}
+function fly(fromEl, toEl, red, dur, then) {
+  const s = stage.getBoundingClientRect();
+  const a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect();
+  const st = document.createElement('div');
+  st.className = 'streak' + (red ? ' red' : '');
+  const x0 = a.right - s.left, y0 = a.top - s.top + a.height / 2;
+  const dx = (b.left - s.left + 8) - x0, dy = (b.top - s.top + b.height / 2) - y0;
+  const ang = Math.atan2(dy, dx);
+  st.style.left = x0 + 'px'; st.style.top = y0 + 'px';
+  st.style.transform = `rotate(${ang}rad)`;
+  st.style.transition = `transform ${dur}ms linear`;  // compositor-friendly
+  stage.appendChild(st);
+  requestAnimationFrame(() =>
+    st.style.transform = `translate(${dx}px,${dy}px) rotate(${ang}rad)`);
+  setTimeout(() => { st.remove(); if (then) then(); }, dur + 40);
+}
+function gateLine(agent, test, why) {
+  killn++; $('killn').textContent = killn;
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="test">${test}</span> ${agent} — ${(why || '').slice(0, 90)}`;
+  $('gateledger').prepend(d);
+}
+function queueAnim(fn) { animQ.push(fn); drain(); }
+function drain() {
+  if (draining) return;
+  draining = true;
+  const step = () => {
+    if (!animQ.length) { draining = false; return; }
+    // burst catch-up: if a replay dumped many events, skip streak theater
+    const fast = animQ.length > 12;
+    const fn = animQ.shift(); fn(fast);
+    setTimeout(step, fast ? 25 : 170);
+  };
+  step();
+}
+
+/* ---------- document ---------- */
+async function loadDoc() {
+  if (!meta || !meta.chart) return;
+  try {
+    const txt = await fetch('/' + meta.chart).then(r => r.text());
+    const stripped = txt.replace(/<!--[\s\S]*?-->/g, '');
+    const doc = $('doc'); doc.innerHTML = '';
+    for (const raw of stripped.split('\n')) {
+      const line = raw.trimEnd();
+      if (!line.trim()) continue;
+      if (line.startsWith('# ')) {
+        const d = document.createElement('div');
+        d.className = 'docmeta'; d.textContent = line.slice(2);
+        doc.appendChild(d);
+        $('pt').textContent = line.slice(2).split('(')[0]
+          .replace(/SYNTHETIC PATIENT CHART[ —-]*/i, '').slice(0, 40) || '—';
+      } else if (line.startsWith('## ')) {
+        const h = document.createElement('h4'); h.textContent = line.slice(3);
+        doc.appendChild(h);
+        if (/UNDER ATTACK/i.test(line))
+          $('target').textContent = line.slice(3)
+            .replace(/[—-]? ?THE (PLAN|DOCUMENTATION) UNDER ATTACK/i, '').slice(0, 46);
+      } else {
+        const d = document.createElement('div'); d.className = 'ln';
+        d.textContent = line.replace(/^[-*] /, '');
+        doc.appendChild(d);
+      }
+    }
+    docLoaded = true;
+    inkMarks();
+  } catch (err) {}
+}
+function inkMarks() {
+  if (!docLoaded) return;
+  const lns = [...document.querySelectorAll('.ln')];
+  findings.forEach((f, i) => {
+    const letter = LETTERS[i] || '+';
+    for (const q of (f.quotes || []).slice(0, 2)) {
+      const frag = norm(String((q.quote || '').split('...')[0]).slice(0, 80));
+      if (frag.length < 8) continue;
+      const hit = lns.find(l => norm(l.textContent).includes(frag.slice(0, 60)));
+      if (hit && !hit.classList.contains('inked')) {
+        hit.classList.add('inked');
+        hit.dataset.ex = letter;
+        const lab = document.createElement('span');
+        lab.className = 'exlab'; lab.textContent = letter;
+        hit.appendChild(lab);
+      }
+    }
+  });
+}
+
+/* ---------- exhibits ---------- */
+function maybeSubmitFix() {
+  if (fixSubmitted || sawFixEvents || !findings.length) return;
+  if (findings.some(f => !decisions[f.id])) return;
+  fixSubmitted = true;
+  setBtn('fixing');
+  const dismiss = findings.filter(f => decisions[f.id].startsWith('dismiss'))
+    .map(f => ({ id: f.id, rationale: 'clinician judgment — no order tonight' }));
+  fetch('/api/fix', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ run: runDir, dismiss }) }).catch(() => {});
+}
+function exhibit(f, i) {
+  const el = document.createElement('div');
+  el.className = 'ex'; el.id = 'card-' + f.id;
+  const letter = LETTERS[i] || '+';
+  const sevCls = f.tier === 1 ? '' : f.tier === 2 ? 't2' : 't3';
+  const lane = (f.members && f.members[0] || '').split('#')[0].replace(/-/g, ' ');
+  const single = f.found_by === 1 ? ' · single-source, gate-confirmed' : '';
+  el.innerHTML =
+    `<div class="tag"><span class="let">${letter}</span>
+      <span class="sev ${sevCls}">${f.tier_label || ''}</span></div>` +
+    `<h3>${f.title}</h3>` +
+    `<div class="verdict">${f.claim || ''}</div>` +
+    (f.quotes || []).slice(0, 2).map(q =>
+      `<div class="receipt"><b>${q.section}</b> — “${(q.quote || '').slice(0, 110)}”</div>`).join('') +
+    `<div class="corr">launched from ${lane.toUpperCase()} · found by ${f.found_by} of ` +
+    `${window.attackTotal || 30}${single} · <span class="ok">receipts machine-verified ✓</span>` +
+    ` · ${f.citation || ''}</div>` +
+    `<div class="actions"><button class="a">PLACE ORDERS</button>` +
+    `<button class="d">DISMISS — DOCUMENT RATIONALE</button></div>`;
+  el.onclick = e => {
+    if (e.target.tagName === 'BUTTON') return;
+    const mk = document.querySelector(`.ln[data-ex="${letter}"]`);
+    if (mk) { mk.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  };
+  el.querySelector('.a').onclick = () => {
+    if (fixSubmitted || sawFixEvents) return;
+    decisions[f.id] = 'fix';
+    el.classList.add('fixedc');
+    el.querySelector('.actions').innerHTML =
+      '<span class="decided ok">✓ orders queued — transmit on decision-complete</span>';
+    maybeSubmitFix();
+  };
+  el.querySelector('.d').onclick = () => {
+    if (fixSubmitted || sawFixEvents) return;
+    decisions[f.id] = 'dismiss';
+    el.classList.add('dismissedc');
+    el.querySelector('.actions').innerHTML =
+      '<span class="decided no">✗ dismissed — rationale documented</span>';
+    maybeSubmitFix();
+  };
+  return el;
+}
+async function loadFindings() {
+  try {
+    findings = await fetch('/' + runDir + '/findings.json').then(r => r.json());
+    $('verdicts').innerHTML = '';
+    $('emptymsg').style.display = findings.length ? 'none' : 'block';
+    $('emptymsg').textContent = findings.length ? '' : 'Nothing survived review.';
+    findings.forEach((f, i) => $('verdicts').appendChild(exhibit(f, i)));
+    inkMarks();
+    if (findings.length && !sawFixEvents) setBtn('decide');
+    if (!findings.length) setBtn('idle');
+  } catch (err) {}
+}
+function stripActions(id, html, cls) {
+  const c = $('card-' + id); if (!c) return;
+  if (cls) c.classList.add(cls);
+  const a = c.querySelector('.actions'); if (a) a.innerHTML = html;
+}
+
+/* ---------- seal ---------- */
+function showSeal() {
+  const n = laneSeen.length || 1;
+  const hitLanes = new Set(findings.map(f =>
+    (f.members && f.members[0] || '').split('#')[0]));
+  // hairline separators so the ring reads as N examined sectors, not a donut chart
+  const w = 360 / n, gap = Math.min(1.6, w * 0.08);
+  const segs = laneSeen.map((ln, i) => {
+    const c = hitLanes.has(ln) ? 'var(--pen)' : '#3D5169';
+    return `var(--panel) ${i * w}deg ${i * w + gap}deg, ` +
+           `${c} ${i * w + gap}deg ${(i + 1) * w}deg`;
+  });
+  $('seal').style.background = `conic-gradient(${segs.join(',')})`;
+  $('sealn').textContent = window.attackTotal || Object.keys(agents).length;
+  $('seal').classList.add('show');
+}
+
+/* ---------- events ---------- */
+function handle(e) {
+  switch (e.type) {
+    case 'attack_begin':
+      if (!window.attackTotal) window.attackTotal = e.agents;
+      $('lanes').innerHTML = ''; agents = {}; laneSeen = [];
+      killn = 0; $('killn').textContent = 0; $('gateledger').innerHTML = '';
+      $('fieldhead').textContent =
+        `Attack field — ${e.lanes} dimensions × ${Math.round(e.agents / e.lanes)} examiners`;
+      break;
+    case 'attacker_start':
+      queueAnim(() => agentDot(e.agent, e.lane).classList.add('live'));
+      break;
+    case 'objection':
+      queueAnim(() => { const d = agentDot(e.agent, e.lane);
+        d.className = 'agent obj'; d.title = e.claim || ''; });
+      break;
+    case 'no_objection':
+      queueAnim(() => { agentDot(e.agent, e.lane).className = 'agent dead'; });
+      break;
+    case 'killed':
+      queueAnim(fast => {
+        const d = agentDot(e.agent, e.lane);
+        if (fast) { d.className = 'agent dead'; gateLine(e.agent, e.test, e.why); }
+        else fly(d, $('gatecount'), false, 380, () => {
+          d.className = 'agent dead'; gateLine(e.agent, e.test, e.why); });
+        d.title = e.why || '';
+      });
+      break;
+    case 'survivor':
+      queueAnim(fast => {
+        const d = agentDot(e.agent, e.lane);
+        d.className = 'agent surv';
+        if (!fast) fly(d, $('gatecount'), true, 300, () =>
+          fly($('gatecount'), $('doc'), true, 360));
+      });
+      break;
+    case 'cluster_done': case 'receipts_enforced': loadFindings(); break;
+    case 'meter':
+      $('meter').textContent = `${e.t.toFixed(0)}s · $${e.cost.toFixed(2)} — real, measured`;
+      break;
+    case 'order_emitted':
+      sawFixEvents = true;
+      stripActions(e.finding,
+        '<span class="decided ok">✓ order placed by clinician — unverified until re-run</span>',
+        'fixedc');
+      break;
+    case 'covered':
+      sawFixEvents = true;
+      stripActions(e.finding,
+        '<span class="decided ok">✓ covered by orders already placed</span>', 'fixedc');
+      break;
+    case 'dismissed':
+      sawFixEvents = true;
+      stripActions(e.finding,
+        `<span class="decided no">✗ dismissed — “${e.rationale}” (recorded)</span>`,
+        'dismissedc');
+      break;
+    case 'amendment_written':
+      if (meta) meta.chart = runDir + '/amended-chart.md';
+      docLoaded = false; loadDoc();
+      setBtn('rerun');
+      break;
+    case 'reverify_begin':
+      setBtn('rerunning');
+      break;
+    case 'banner': {
+      if (animQ.length) { setTimeout(() => handle(e), 400); return; }  // let the gate count settle
+      const stats = (e.text.split(' — ')[1] || '')
+        .replace(/ ?· attacked and not broken/, '');
+      $('finalstamp').className = 'finalstamp show';
+      $('finalstamp').innerHTML = `0 SURVIVING OBJECTIONS — ${stats}
+        <small>${killn} refuted at the gate · every receipt machine-verified verbatim ·
+        attacked and not broken — not a safety certification</small>`;
+      showSeal();
+      setBtn('idle');
+      break; }
+    case 'residual_gaps':
+      $('finalstamp').className = 'finalstamp bad show';
+      $('finalstamp').innerHTML = `${e.count} OBJECTION(S) SURVIVED THE GATE
+        <small>the fix was incomplete — that is the product working</small>`;
+      setBtn('rerun');
+      break;
+  }
+}
+
+/* ---------- controls ---------- */
+$('run').onclick = async () => {
+  const state = $('run').dataset.state || 'idle';
+  if (state === 'rerun') {
+    setBtn('rerunning');
+    await fetch('/api/reverify', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ run: runDir }) }).catch(() => setBtn('rerun'));
+    return;
+  }
+  setBtn('running');
+  const body = mode === 'discharge' ? { target: 'eleanor' }
+    : { encounter: $('enc').value, summary: $('summary').value };
+  await fetch('/api/attack', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body) }).catch(() => setBtn('idle'));
+};
+$('mDis').onclick = () => { mode = 'discharge';
+  $('mDis').className = 'on'; $('mAmb').className = '';
+  $('ambientctl').style.display = 'none'; };
+$('mAmb').onclick = () => { mode = 'ambient';
+  $('mAmb').className = 'on'; $('mDis').className = '';
+  $('ambientctl').style.display = 'block'; };
+
+function resetView() {
+  nLines = 0; meta = null; agents = {}; laneSeen = []; killn = 0;
+  findings = []; decisions = {}; fixSubmitted = false; sawFixEvents = false;
+  docLoaded = false; animQ = []; window.attackTotal = 0;
+  $('lanes').innerHTML = ''; $('gateledger').innerHTML = '';
+  $('killn').textContent = '0'; $('verdicts').innerHTML = '';
+  $('emptymsg').style.display = 'block';
+  $('emptymsg').textContent = 'No surviving objections yet.';
+  $('doc').innerHTML = '<div class="docmeta">Loading document…</div>';
+  $('seal').classList.remove('show'); $('finalstamp').classList.remove('show');
+  $('meter').textContent = '0s · $0.00';
+  $('runstamp').textContent = runDir.replace('runs/', '').toUpperCase();
+}
+async function latest() {
+  if (runDir && nLines === 0 && !meta) return runDir;
+  const r = await fetch('/api/latest').then(r => r.json()).catch(() => null);
+  return (r && r.run) || runDir;
+}
+async function poll() {
+  const rd = await latest();
+  if (rd) {
+    if (rd !== runDir) { runDir = rd; resetView(); }
+    if (!meta) {
+      meta = await fetch('/' + runDir + '/meta.json').then(r => r.json()).catch(() => null);
+      if (meta) {
+        if (meta.encounter) $('target').textContent = meta.encounter.slice(0, 46);
+        loadDoc();
+      }
+    }
+    const txt = await fetch('/' + runDir + '/events.jsonl').then(r => r.text()).catch(() => '');
+    const lines = txt.split('\n').filter(Boolean);
+    for (let i = nLines; i < lines.length; i++) {
+      try { handle(JSON.parse(lines[i])); } catch (err) {}
+    }
+    nLines = lines.length;
+  }
+  setTimeout(poll, 400);
+}
+setBtn('idle');
+poll();
+</script>
+</body>
+</html>
