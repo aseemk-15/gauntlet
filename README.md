@@ -32,9 +32,18 @@ discarded.
 ```bash
 python3 -m venv .venv && .venv/bin/pip install anthropic
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env   # never committed
-./gauntlet-cli run assets/chart-eleanor-vance.md           # full 30-agent gauntlet
-./gauntlet-cli run assets/chart-eleanor-vance.md --amended # attack the amended plan
-./gauntlet-cli run --encounter covid-inpt                  # ambient mode (organizer dataset)
+
+# the full demo arc, headless:
+./gauntlet-cli run assets/chart-eleanor-vance.md   # 30 attackers -> judge -> evidence cards
+./gauntlet-cli fix runs/<run-dir> \                # clinician decisions -> orders + amendment
+    --dismiss <finding-id>:"rationale"             #   (amendment SUPERSEDES the med list)
+./gauntlet-cli reverify runs/<run-dir>             # targeted re-attack of the fixed lanes
+
+# ambient-documentation mode (organizer dataset):
+./gauntlet-cli run --encounter covid-inpt          # aliases: covid-inpt, annual-htn, hospice-1/2
+
+# mission-log view (renders the same real event stream the CLI prints):
+.venv/bin/python ui/serve.py                       # http://localhost:3010
 ```
 
 ## How it works
