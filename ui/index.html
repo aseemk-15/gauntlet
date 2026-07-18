@@ -185,6 +185,8 @@ function card(f) {
     `<h3>${f.title}</h3>` +
     `<span class="badge">found independently by ${f.found_by} of ${attackTotal || 30}${single}</span>` +
     `<div class="cite">${f.citation || ''}</div>` +
+    (f.receipts_verified ?
+      `<div class="cite" style="color:var(--green)">receipts machine-verified verbatim ✓</div>` : '') +
     (f.quotes || []).slice(0, 3).map(q =>
       `<div class="quote"><i>[${q.section}]</i> “${(q.quote || '').slice(0, 110)}”</div>`).join('') +
     `<div class="order">▸ ${f.proposed_order || ''}</div>`;

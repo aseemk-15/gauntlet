@@ -97,6 +97,8 @@ def render_card(f: dict, total: int = 30, width: int = 78) -> str:
              f"  cite: {f.get('citation', '')}",
              f"  CLAIM   {f.get('claim', '')}",
              f"  GAP     {f.get('missing', '')}"]
+    if f.get("receipts_verified"):
+        lines.append("  RECEIPTS machine-verified verbatim against source ✓")
     for q in f.get("quotes", [])[:3]:
         if isinstance(q, dict):
             lines.append(f"  RECEIPT [{q.get('section', '?')}] \"{q.get('quote', '')[:90]}\"")

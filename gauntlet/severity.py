@@ -53,10 +53,12 @@ def classify(finding: dict) -> dict:
                                "routing", "result")):
         return finding | {"tier": 2, "tier_label": TIERS[2],
                           "citation": "Unowned pending result at transition of care "
-                                      "(Roy et al., Ann Intern Med 2005 class)"}
+                                      "(Roy et al., Ann Intern Med 2005; CMS discharge "
+                                      "planning CoP, 42 CFR 482.43)"}
     if any(w in blob for w in ("weight", "diuretic", "dry weight", "volume")):
         return finding | {"tier": 2, "tier_label": TIERS[2],
                           "citation": "Documented specialist target not operationalized "
-                                      "at discharge (HF readmission driver)"}
+                                      "at discharge (HF readmission driver; Joint "
+                                      "Commission handoff communication NPSG class)"}
     return finding | {"tier": 3, "tier_label": TIERS[3],
                       "citation": "Surviving objection outside encoded high-risk classes"}
