@@ -3,13 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Discharge Summary — The Gauntlet</title>
+<title>Chart — The Gauntlet</title>
 <style>
   :root{
-    --bg:#EDF0F3; --chrome:#FFFFFF; --line:#D5DCE3; --ink:#1C2833; --mut:#5D6C7B;
+    --bg:#E9EDF1; --chrome:#FFFFFF; --line:#D5DCE3; --ink:#1C2833; --mut:#5D6C7B;
     --paper:#FFFFFF; --pen:#C43B2E; --penbg:#FBEFED; --amber:#8A5B00;
     --ambbg:#FBF4E4; --grn:#1F7A3F; --grnbg:#EFF7F1; --blue:#0B63C5;
-    --room:#10151B; --roomtxt:#C8D2DC; --roomlabel:#7A93AD;
     --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
     --serif:Charter,Georgia,serif;
     --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
@@ -17,46 +16,67 @@
   *{box-sizing:border-box;margin:0}
   body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
   /* patient banner */
-  .banner{background:var(--chrome);border-bottom:1px solid var(--line);
-          padding:10px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-  .banner .pt{font:700 16.5px var(--sans)}
-  .banner .demo{font:12px var(--sans);color:var(--mut)}
+  .banner{background:#22303E;color:#fff;padding:9px 20px;display:flex;
+          align-items:center;gap:16px;flex-wrap:wrap}
+  .banner .pt{font:700 16px var(--sans)}
+  .banner .demo{font:11.5px var(--sans);color:#9FB0C0}
   .banner .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  select{font:12.5px var(--sans);border:1px solid var(--line);border-radius:5px;
-         padding:6px 8px;background:#fff;color:var(--ink)}
-  .runbtn{font:700 13px var(--sans);letter-spacing:.04em;background:var(--pen);
-          border:1px solid var(--pen);color:#fff;border-radius:6px;
-          padding:9px 18px;cursor:pointer;min-width:210px}
+  select{font:12px var(--sans);border:1px solid var(--line);border-radius:5px;
+         padding:5px 8px;background:#fff;color:var(--ink)}
+  .runbtn{font:700 12.5px var(--sans);background:var(--pen);border:1px solid var(--pen);
+          color:#fff;border-radius:6px;padding:8px 16px;cursor:pointer;min-width:190px}
   .runbtn:hover{background:#AD3226}
-  .runbtn:disabled{opacity:.5;cursor:default}
-  .runbtn.rerun{background:#fff;color:var(--amber);border-color:var(--amber)}
-  button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-  /* verify chip */
-  .chipbar{padding:8px 22px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  .runbtn:disabled{opacity:.55;cursor:default}
+  .runbtn.rerun{background:#fff;color:var(--amber);border-color:#D8B96A}
+  button:focus-visible{outline:2px solid #7EB3E8;outline-offset:2px}
+  /* gauntlet pill */
+  #gpill{display:none;align-items:center;gap:9px;background:#182430;
+         border:1px solid #3A4C5E;border-radius:16px;padding:5px 13px;
+         font:11.5px var(--mono);color:#C8D2DC;cursor:pointer}
+  #gpill .dots{display:flex;gap:3px}
+  #gpill .dots i{width:7px;height:7px;border-radius:50%;background:#3D4F61;
+                 animation:gp 1.1s ease-in-out infinite}
+  #gpill .dots i:nth-child(2){animation-delay:.18s}
+  #gpill .dots i:nth-child(3){animation-delay:.36s}
+  #gpill .dots i:nth-child(4){animation-delay:.54s}
+  @keyframes gp{50%{background:#7A93AD;box-shadow:0 0 5px rgba(122,147,173,.8)}}
+  #gpill b{color:#E2A33C;font-weight:700}
+  #gpill.done .dots i{animation:none;background:#2E7D4F}
+  @media(prefers-reduced-motion:reduce){#gpill .dots i{animation:none}}
+  /* tabs */
+  .tabs{background:var(--chrome);border-bottom:1px solid var(--line);
+        display:flex;gap:2px;padding:0 16px;overflow-x:auto}
+  .tab{font:600 13px var(--sans);color:var(--mut);border:0;background:none;
+       padding:11px 14px;cursor:pointer;border-bottom:3px solid transparent;
+       white-space:nowrap;position:relative}
+  .tab.on{color:var(--ink);border-bottom-color:var(--pen)}
+  .tab .bdg{display:none;position:absolute;top:6px;right:2px;background:var(--pen);
+            color:#fff;font:700 9.5px var(--sans);border-radius:8px;
+            min-width:15px;height:15px;line-height:15px;text-align:center;padding:0 3px}
+  .tab .bdg.grn{background:var(--grn)}
+  /* chip bar */
+  .chipbar{padding:8px 20px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
            font:12px var(--sans);color:var(--mut)}
-  #verifychip{display:none;background:var(--grnbg);border:1px solid #BFDCC8;
-              color:var(--grn);border-radius:14px;padding:3px 13px;font-weight:600}
+  .chipbar>span{display:none}
+  #verifychip{background:var(--grnbg);border:1px solid #BFDCC8;color:var(--grn);
+              border-radius:14px;padding:3px 13px;font-weight:600}
   #verifychip small{color:var(--mut);font-weight:400}
-  #residchip{display:none;background:var(--penbg);border:1px solid #E7C2BD;
-             color:var(--pen);border-radius:14px;padding:3px 13px;font-weight:600}
-  #findchip{display:none;background:var(--ambbg);border:1px solid #E4D2A8;
-            color:var(--amber);border-radius:14px;padding:3px 13px;font-weight:600}
-  #meter{margin-left:auto;font:11.5px var(--mono);color:var(--mut);
-         font-variant-numeric:tabular-nums}
-  /* note page */
-  .page{max-width:900px;margin:8px auto 80px;background:var(--paper);
+  #residchip{background:var(--penbg);border:1px solid #E7C2BD;color:var(--pen);
+             border-radius:14px;padding:3px 13px;font-weight:600}
+  #findchip{background:var(--ambbg);border:1px solid #E4D2A8;color:var(--amber);
+            border-radius:14px;padding:3px 13px;font-weight:600;cursor:pointer}
+  /* panes */
+  .page{max-width:920px;margin:10px auto 60px;background:var(--paper);
         border:1px solid var(--line);border-radius:8px;
-        box-shadow:0 2px 14px rgba(28,40,51,.07);padding:34px 44px;min-height:500px}
-  .page .doctitle{font:700 17px var(--serif);border-bottom:2px solid var(--ink);
-                  padding-bottom:8px;margin-bottom:6px}
-  .page .docsub{font:11px var(--sans);color:var(--mut);letter-spacing:.05em;
-                margin-bottom:14px}
-  .page h4{font:700 11.5px var(--sans);letter-spacing:.1em;color:var(--mut);
+        box-shadow:0 2px 14px rgba(28,40,51,.07);padding:26px 40px;min-height:420px}
+  .pane{display:none}
+  .pane.on{display:block}
+  .pane h4{font:700 11.5px var(--sans);letter-spacing:.1em;color:var(--mut);
            text-transform:uppercase;margin:16px 0 4px}
-  .ln{font:13.5px/1.7 var(--serif);padding:1px 3px;border-radius:2px;
-      transition:background .3s}
+  .pane h4:first-child{margin-top:0}
+  .ln{font:13.5px/1.65 var(--serif);padding:1px 3px;border-radius:2px}
   .ln.marked{background:var(--penbg);border-bottom:2px solid var(--pen);
-             cursor:pointer;position:relative}
+             cursor:pointer}
   .ln.marked:hover{background:#F7E2DF}
   .ln.marked.resolved{background:var(--grnbg);border-bottom-color:var(--grn)}
   .ln.marked.waived{background:#F2F4F6;border-bottom-color:#B9C4CE}
@@ -65,12 +85,30 @@
           line-height:16px;text-align:center;margin-left:6px;position:relative;top:-2px}
   .ln.marked.resolved .exchip{background:var(--grn)}
   .ln.marked.waived .exchip{background:#9AA7B2}
-  .ins{font:13.5px/1.65 var(--serif);color:var(--grn);background:var(--grnbg);
+  .ins{font:13.5px/1.6 var(--serif);color:var(--grn);background:var(--grnbg);
        border-left:3px solid var(--grn);padding:3px 10px;margin:4px 0;
-       border-radius:0 3px 3px 0;animation:insin .5s}
-  .ins .tag{font:700 9.5px var(--sans);letter-spacing:.1em;color:var(--grn);
-            display:block}
-  @keyframes insin{from{opacity:0;transform:translateY(-4px)}}
+       border-radius:0 3px 3px 0}
+  .ins .tag{font:700 9.5px var(--sans);letter-spacing:.1em;color:var(--grn);display:block}
+  /* plan tab extras */
+  .planbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .planbar .cap{font:11px var(--sans);color:var(--mut)}
+  .editbtn{font:600 12px var(--sans);border:1px solid var(--line);border-radius:5px;
+           background:#fff;color:var(--mut);padding:6px 12px;cursor:pointer}
+  .editbtn:hover{color:var(--ink);border-color:var(--mut)}
+  #planedit{display:none;width:100%;min-height:180px;font:13px/1.6 var(--mono);
+            border:1px solid #CFE0F2;border-radius:6px;padding:12px;color:var(--ink)}
+  .editnote{display:none;font:11px var(--sans);color:var(--amber);
+            background:var(--ambbg);border:1px solid #E4D2A8;border-radius:5px;
+            padding:5px 10px;margin-bottom:8px}
+  #flist{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+  #flist .fl{font:12.5px var(--sans);padding:3px 0;cursor:pointer;color:var(--ink)}
+  #flist .fl:hover{color:var(--blue)}
+  #flist .fl .l{display:inline-block;font:700 10px var(--sans);color:#fff;
+                background:var(--pen);border-radius:50%;width:15px;height:15px;
+                line-height:15px;text-align:center;margin-right:7px}
+  #flist .fl.resolved .l{background:var(--grn)}
+  #flist .fl.waived .l{background:#9AA7B2}
+  #flist .fl small{color:var(--mut)}
   /* popover */
   #pop{position:absolute;z-index:30;width:430px;max-width:92vw;background:#fff;
        border:1px solid var(--line);border-top:3px solid var(--pen);border-radius:8px;
@@ -98,100 +136,55 @@
   #pop .chips button{font:600 11px var(--sans);border-radius:12px;padding:4px 11px;
                      border:1px solid var(--line);background:#fff;color:var(--mut);
                      cursor:pointer}
-  #pop .chips button:hover{border-color:var(--mut);color:var(--ink)}
   #pop .status{font:600 12px var(--sans);margin-top:10px}
   #pop .status.ok{color:var(--grn)} #pop .status.no{color:var(--mut)}
   #pop .x{position:absolute;top:8px;right:12px;color:var(--mut);cursor:pointer;
           font-size:15px;background:none;border:0}
-  /* ceremony overlay */
-  #ceremony{position:fixed;inset:0;background:rgba(11,16,22,.82);z-index:50;
-            display:none;align-items:center;justify-content:center;padding:20px}
-  #ceremony.show{display:flex}
-  .cerecard{background:var(--room);border:1px solid #2E3C4D;border-radius:10px;
-            color:var(--roomtxt);width:640px;max-width:95vw;padding:22px 26px;
-            box-shadow:0 40px 120px rgba(0,0,0,.6)}
-  .cerecard .hd{font:700 13px var(--mono);letter-spacing:.16em;color:#EFE9DC;
-                text-transform:uppercase}
-  .cerecard .phase{font:11px var(--mono);letter-spacing:.1em;color:var(--amber);
-                   min-height:15px;margin:4px 0 14px}
-  .ceregrid{display:grid;grid-template-columns:1fr 150px;gap:18px}
-  .clane{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
-         padding:3.5px 0;border-bottom:1px solid #1E2833}
-  .clane .nm{font:10.5px var(--sans);letter-spacing:.06em;color:#8FA1B2;
-             text-transform:uppercase}
-  .cagents{display:flex;gap:4px}
-  .cagent{width:12px;height:12px;border-radius:50%;background:#232E3A;
-          border:1px solid #2C3947;transition:all .3s}
-  .cagent.live{background:#3D4F61;border-color:#7A93AD;
-               box-shadow:0 0 6px rgba(122,147,173,.5)}
-  .cagent.obj{background:#4E4632;border-color:#D99A2B}
-  .cagent.dead{opacity:.3}
-  .cagent.surv{background:#C43B2E;border-color:#C43B2E;
-               box-shadow:0 0 8px rgba(196,59,46,.7)}
-  .cgate{text-align:center;border-left:1px dashed #4A607A;padding-left:16px}
-  .cgate .n{font:700 40px var(--mono);color:#C8D2DC;font-variant-numeric:tabular-nums}
-  .cgate .cap{font:9.5px var(--sans);letter-spacing:.14em;color:#7A93AD;
-              text-transform:uppercase}
-  .cgate .last{font:9.5px/1.5 var(--mono);color:#8FA1B2;margin-top:10px;
-               min-height:56px;text-align:left}
-  .cgate .last .test{color:#D99A2B}
-  .cerefoot{font:10px var(--mono);color:#5F7183;margin-top:14px}
   footer{position:fixed;bottom:0;left:0;right:0;background:var(--chrome);
-         border-top:1px solid var(--line);padding:6px 22px;font:10.5px var(--sans);
-         color:var(--mut);display:flex;gap:14px;flex-wrap:wrap}
+         border-top:1px solid var(--line);padding:5px 20px;font:10.5px var(--sans);
+         color:var(--mut);display:flex;gap:14px;flex-wrap:wrap;z-index:5}
   footer a{color:var(--mut)}
-  @media(prefers-reduced-motion:reduce){.ins{animation:none}.cagent{transition:none}}
+  #meter{margin-left:auto;font:10.5px var(--mono);font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
 <div class="banner">
   <span class="pt" id="pt">—</span><span class="demo" id="ptdemo"></span>
   <div class="right">
+    <div id="gpill" title="the gauntlet is running in the background — click for the discharge tab">
+      <span class="dots"><i></i><i></i><i></i><i></i></span>
+      <span id="gpilltxt">attacking…</span>
+    </div>
     <select id="caseSel">
       <option value="eleanor">Vance, Eleanor — discharge 07/16</option>
-      <option value="covid-inpt">COVID inpatient admission (organizer data)</option>
+      <option value="covid-inpt">COVID inpatient (organizer data)</option>
       <option value="annual-htn">Annual exam — new HTN (organizer data)</option>
       <option value="hospice-1">Hospice admission (organizer data)</option>
     </select>
     <button class="runbtn" id="run">▶ Run the Gauntlet</button>
   </div>
 </div>
+<div class="tabs" id="tabs"></div>
 <div class="chipbar">
-  <span id="findchip"></span>
-  <span id="verifychip"></span>
-  <span id="residchip"></span>
-  <span id="meter">0s · $0.00</span>
+  <span id="findchip"></span><span id="verifychip"></span><span id="residchip"></span>
 </div>
 
-<div class="page" id="page">
-  <div class="doctitle" id="doctitle">Discharge Summary</div>
-  <div class="docsub" id="docsub">Draft — not yet attacked</div>
-  <div id="doc"></div>
+<div class="page">
+  <div id="panes"></div>
+  <div id="planextras" style="display:none">
+    <div id="flist"></div>
+  </div>
 </div>
 
 <div id="pop" role="dialog"><button class="x" id="popx">✕</button><div id="popbody"></div></div>
 
-<div id="ceremony"><div class="cerecard">
-  <div class="hd">THE GAUNTLET — <span id="cerecount">30</span> ADVERSARIAL REVIEWERS</div>
-  <div class="phase" id="cerephase">launching…</div>
-  <div class="ceregrid">
-    <div id="celanes"></div>
-    <div class="cgate">
-      <div class="n" id="ckilln">0</div>
-      <div class="cap">refuted by the judge<br>four tests · default kill</div>
-      <div class="last" id="clast"></div>
-    </div>
-  </div>
-  <div class="cerefoot">every number measured live · every receipt machine-verified
-    verbatim · findings appear in the note when review completes</div>
-</div></div>
-
 <footer>
-  <span>The Gauntlet — adversarial discharge review. Findings are reviewed arguments
-  with verbatim receipts, not certifications. The clinician decides everything;
-  dismissal rationales are recorded.</span>
-  <span style="margin-left:auto"><a href="/md">physician sheet</a> ·
-  <a href="/corridor">corridor</a> · <a href="/classic">classic</a></span>
+  <span>The Gauntlet — adversarial review inside the chart. Findings are reviewed
+  arguments with verbatim receipts, not certifications; the clinician decides
+  everything. Synthetic data.</span>
+  <span><a href="/md">sheet</a> · <a href="/corridor">corridor</a> ·
+  <a href="/classic">classic</a></span>
+  <span id="meter">0s · $0.00</span>
 </footer>
 
 <script>
@@ -199,13 +192,55 @@ const $ = id => document.getElementById(id);
 let runDir = new URLSearchParams(location.search).get('run');
 let nLines = 0, meta = null, findings = [], decisions = {};
 let fixSubmitted = false, sawFixEvents = false, docLoaded = false;
-let cagents = {}, killn = 0, attackTotal = 0, running = false;
-let planSection = null, pinned = null;
+let killn = 0, agentsLive = 0, attackTotal = 0, running = false;
+let planPane = null, planRaw = '', planEdited = false, pinned = null, insCursor = null;
 const LETTERS = 'ABCDEFGH';
 const norm = s => s.replace(/[—–−]/g, '-').replace(/[‘’]/g, "'")
                    .replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
 
-/* ---------- button ---------- */
+/* ---------- tabs ---------- */
+const TABDEFS = [
+  ['overview', 'Overview', /demographic|problem|social|advance care|goals/i],
+  ['notes', 'Notes', /h&p|admission|hospital course|pt note|transcript/i],
+  ['meds', 'Meds & Labs', /medication|labs|micro|fhir/i],
+  ['records', 'Vitals & Records', /vitals|weights|outside|scanned|cardiology/i],
+  ['plan', 'Discharge Plan', /under attack|under review|discharge order|summary draft|note \(soap|avs \(/i],
+];
+function tabFor(title) {
+  for (const [id, , re] of TABDEFS) if (re.test(title)) return id;
+  return 'notes';
+}
+function buildTabs() {
+  $('tabs').innerHTML = '';
+  $('panes').innerHTML = '';
+  for (const [id, label] of TABDEFS) {
+    const b = document.createElement('button');
+    b.className = 'tab'; b.id = 'tab-' + id; b.dataset.pane = id;
+    b.innerHTML = `${label}<span class="bdg" id="bdg-${id}"></span>`;
+    b.onclick = () => selectTab(id);
+    $('tabs').appendChild(b);
+    const p = document.createElement('div');
+    p.className = 'pane'; p.id = 'pane-' + id;
+    $('panes').appendChild(p);
+  }
+  selectTab('plan');
+}
+function selectTab(id) {
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.toggle('on', t.dataset.pane === id));
+  document.querySelectorAll('.pane').forEach(p =>
+    p.classList.toggle('on', p.id === 'pane-' + id));
+  $('pop').style.display = 'none'; pinned = null;
+}
+function badge(tab, n, green) {
+  const b = $('bdg-' + tab);
+  if (!b) return;
+  b.style.display = n ? 'inline-block' : 'none';
+  b.textContent = n;
+  b.classList.toggle('grn', !!green);
+}
+
+/* ---------- button + pill ---------- */
 function setBtn(state) {
   const b = $('run');
   const S = { idle: [false, '▶ Run the Gauntlet', ''],
@@ -217,25 +252,12 @@ function setBtn(state) {
   b.disabled = S[0]; b.textContent = S[1];
   b.className = 'runbtn ' + S[2]; b.dataset.state = state;
 }
-
-/* ---------- ceremony ---------- */
-function ceremonyAgent(agent, lane) {
-  if (cagents[agent]) return cagents[agent];
-  let row = document.querySelector(`[data-clane="${lane}"] .cagents`);
-  if (!row) {
-    const l = document.createElement('div');
-    l.className = 'clane'; l.dataset.clane = lane;
-    l.innerHTML = `<div class="nm">${lane.replace(/-/g, ' ')}</div><div class="cagents"></div>`;
-    $('celanes').appendChild(l);
-    row = l.querySelector('.cagents');
-  }
-  const d = document.createElement('i');
-  d.className = 'cagent';
-  row.appendChild(d);
-  cagents[agent] = d;
-  return d;
+function pill(show, txt, done) {
+  $('gpill').style.display = show ? 'flex' : 'none';
+  $('gpill').classList.toggle('done', !!done);
+  if (txt) $('gpilltxt').innerHTML = txt;
 }
-function ceremonyShow(on) { $('ceremony').classList.toggle('show', on); }
+$('gpill').onclick = () => selectTab('plan');
 
 /* ---------- document ---------- */
 async function loadDoc() {
@@ -243,73 +265,164 @@ async function loadDoc() {
   try {
     const txt = await fetch('/' + meta.chart).then(r => r.text());
     const stripped = txt.replace(/<!--[\s\S]*?-->/g, '');
-    const doc = $('doc'); doc.innerHTML = ''; planSection = null;
-    let inPlan = false;
+    buildTabs();
+    planRaw = ''; planEdited = false; insCursor = null;
+    let pane = $('pane-notes'), inPlan = false;
     for (const raw of stripped.split('\n')) {
       const line = raw.trimEnd();
       if (!line.trim()) continue;
       if (line.startsWith('# ')) {
         const t = line.slice(2);
         $('pt').textContent = t.replace(/SYNTHETIC PATIENT CHART[ —-]*/i, '')
-          .replace(/\(.*\)/, '').trim().slice(0, 44) || 'Patient';
-        $('ptdemo').textContent = /SYNTHETIC|FICTIONAL/i.test(t)
-          ? 'synthetic chart — demo data' : '';
+          .replace(/\(.*\)/, '').replace(/AMBIENT ENCOUNTER[ —-]*/i, '')
+          .trim().slice(0, 46) || 'Patient';
+        $('ptdemo').textContent = 'synthetic chart — demo data';
         continue;
       }
       if (line.startsWith('## ')) {
+        const title = line.slice(3);
+        const tid = tabFor(title);
+        pane = $('pane-' + tid);
+        inPlan = tid === 'plan';
         const h = document.createElement('h4');
-        h.textContent = line.slice(3).replace(/[—-]? ?THE (PLAN|DOCUMENTATION) UNDER ATTACK/i,
+        h.textContent = title.replace(/[—-]? ?THE (PLAN|DOCUMENTATION) UNDER ATTACK/i,
           ' — under review');
-        doc.appendChild(h);
-        inPlan = /UNDER ATTACK/i.test(line);
-        if (inPlan) planSection = h;
+        pane.appendChild(h);
+        if (inPlan && !planPaneReady()) addPlanBar(pane);
         continue;
       }
       const d = document.createElement('div'); d.className = 'ln';
       d.textContent = line.replace(/^[-*] /, '');
-      doc.appendChild(d);
-      if (inPlan) planSection = d;
+      pane.appendChild(d);
+      if (inPlan) { planRaw += line + '\n'; insCursor = d; }
     }
+    planPane = $('pane-plan');
+    $('pane-plan').appendChild($('planextras'));
+    $('planextras').style.display = 'block';
     docLoaded = true;
     inkMarks();
+    flushIns();
   } catch (err) {}
 }
+function planPaneReady() { return !!document.querySelector('#pane-plan .planbar'); }
+function addPlanBar(pane) {
+  const bar = document.createElement('div');
+  bar.className = 'planbar';
+  bar.innerHTML = `<span class="cap">The section the gauntlet attacks. Edit it, then
+    run again.</span><button class="editbtn" id="editbtn">✎ Edit plan</button>`;
+  pane.appendChild(bar);
+  const note = document.createElement('div');
+  note.className = 'editnote'; note.id = 'editnote';
+  note.textContent = 'Plan edited — the next run attacks your edited version.';
+  pane.appendChild(note);
+  const ta = document.createElement('textarea');
+  ta.id = 'planedit';
+  pane.appendChild(ta);
+  bar.querySelector('#editbtn').onclick = () => toggleEdit();
+}
+function toggleEdit() {
+  const ta = $('planedit'), btn = $('editbtn');
+  const lns = [...document.querySelectorAll('#pane-plan .ln')];
+  if (ta.style.display !== 'block') {
+    ta.value = planRaw.trim();
+    ta.style.display = 'block';
+    lns.forEach(l => l.style.display = 'none');
+    btn.textContent = '✓ Done editing';
+  } else {
+    if (ta.value.trim() !== planRaw.trim()) {
+      planRaw = ta.value.trim() + '\n';
+      planEdited = true;
+      $('editnote').style.display = 'block';
+      lns.forEach(l => l.remove());
+      const frag = document.createDocumentFragment();
+      for (const line of planRaw.trim().split('\n')) {
+        const d = document.createElement('div');
+        d.className = 'ln'; d.textContent = line.replace(/^[-*] /, '');
+        frag.appendChild(d);
+        insCursor = d;
+      }
+      ta.after(frag);
+    } else {
+      lns.forEach(l => l.style.display = '');
+    }
+    ta.style.display = 'none';
+    btn.textContent = '✎ Edit plan';
+  }
+}
+
+/* ---------- marks ---------- */
 function inkMarks() {
   if (!docLoaded) return;
   const lns = [...document.querySelectorAll('.ln')];
+  const perTab = {};
   findings.forEach((f, i) => {
     const letter = LETTERS[i] || '+';
-    if (document.querySelector(`.ln[data-ex="${letter}"]`)) return;
-    for (const q of (f.quotes || []).slice(0, 2)) {
-      const frag = norm(String((q.quote || '').split('...')[0]).slice(0, 80));
-      if (frag.length < 8) continue;
-      const hit = lns.find(l => !l.dataset.ex &&
-        norm(l.textContent).includes(frag.slice(0, 60)));
-      if (hit) {
-        hit.classList.add('marked');
-        hit.dataset.ex = letter;
+    let anchor = document.querySelector(`.ln[data-ex="${letter}"]`);
+    if (!anchor) {
+      for (const len of [60, 35]) {
+        for (const q of (f.quotes || []).slice(0, 3)) {
+          const frag = norm(String((q.quote || '').split('...')[0]).slice(0, 80));
+          if (frag.length < 8) continue;
+          anchor = lns.find(l => !l.dataset.ex &&
+            norm(l.textContent).includes(frag.slice(0, len)));
+          if (anchor) break;
+        }
+        if (anchor) break;
+      }
+      if (anchor) {
+        anchor.classList.add('marked');
+        anchor.dataset.ex = letter;
         const c = document.createElement('span');
         c.className = 'exchip'; c.textContent = letter;
-        hit.appendChild(c);
-        hit.onclick = ev => { ev.stopPropagation(); showPop(f, i, hit, true); };
-        hit.onmouseenter = () => { if (!pinned) showPop(f, i, hit, false); };
-        break;  // one anchor per finding — rare, heavy marks
+        anchor.appendChild(c);
+        anchor.onclick = ev => { ev.stopPropagation(); showPop(f, i, anchor, true); };
+        anchor.onmouseenter = () => { if (!pinned) showPop(f, i, anchor, false); };
       }
+    }
+    if (anchor) {
+      const tab = anchor.closest('.pane').id.replace('pane-', '');
+      f._tab = tab;
+      perTab[tab] = (perTab[tab] || 0) + 1;
     }
     applyState(f, i);
   });
-  $('docsub').textContent = findings.length
-    ? `${findings.length} finding(s) survived adversarial review — click a highlight`
-    : $('docsub').textContent;
+  const allDone = findings.length && findings.every(f =>
+    f._state || decisions[f.id]);
+  for (const [id] of TABDEFS)
+    badge(id, perTab[id] || 0, allDone);
+  renderFlist();
 }
 function applyState(f, i) {
   const el = document.querySelector(`.ln[data-ex="${LETTERS[i]}"]`);
   if (!el) return;
   el.classList.remove('resolved', 'waived');
-  const d = decisions[f.id] || (sawFixEvents ? f._state : null);
+  const d = decisions[f.id];
   if (d === 'fix' || f._state === 'fixed') el.classList.add('resolved');
   else if ((d || '').startsWith('dismiss') || f._state === 'dismissed')
     el.classList.add('waived');
+}
+function renderFlist() {
+  const fl = $('flist');
+  if (!findings.length) { fl.innerHTML = ''; return; }
+  fl.innerHTML = '<h4>Findings — adversarial review</h4>';
+  findings.forEach((f, i) => {
+    const d = document.createElement('div');
+    const st = (f._state === 'fixed' || decisions[f.id] === 'fix') ? 'resolved'
+      : (f._state === 'dismissed' || (decisions[f.id] || '').startsWith('dismiss'))
+        ? 'waived' : '';
+    d.className = 'fl ' + st;
+    const tabName = (TABDEFS.find(t => t[0] === f._tab) || ['', 'chart'])[1];
+    d.innerHTML = `<span class="l">${LETTERS[i]}</span>${f.title}
+      <small>· ${f.tier_label || ''} · in ${tabName}</small>`;
+    d.onclick = ev => {
+      ev.stopPropagation();
+      const a = document.querySelector(`.ln[data-ex="${LETTERS[i]}"]`);
+      if (a) { if (f._tab) selectTab(f._tab);
+        a.scrollIntoView({ block: 'center' }); showPop(f, i, a, true); }
+      else showPop(f, i, d, true);  // unanchored finding — popover on the list row
+    };
+    fl.appendChild(d);
+  });
 }
 
 /* ---------- popover ---------- */
@@ -347,10 +460,9 @@ function showPop(f, i, anchor, pin) {
   pop.className = (f._state === 'fixed' || decided === 'fix') ? 'res' : '';
   pop.style.display = 'block';
   const r = anchor.getBoundingClientRect();
-  const top = r.bottom + window.scrollY + 6;
-  let left = r.left + window.scrollX;
-  left = Math.min(left, window.scrollX + document.documentElement.clientWidth - 450);
-  pop.style.top = top + 'px'; pop.style.left = Math.max(8, left) + 'px';
+  pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  pop.style.left = Math.max(8, Math.min(r.left + window.scrollX,
+    window.scrollX + document.documentElement.clientWidth - 450)) + 'px';
   const acc = $('pacc'), dis = $('pdis');
   if (acc) acc.onclick = () => decide(f, i, 'fix');
   if (dis) dis.onclick = () => { $('pchips').style.display = 'flex'; };
@@ -365,8 +477,9 @@ document.addEventListener('click', e => {
 function decide(f, i, d) {
   if (fixSubmitted || sawFixEvents) return;
   decisions[f.id] = d;
-  applyState(f, i);
-  showPop(f, i, document.querySelector(`.ln[data-ex="${LETTERS[i]}"]`) || $('page'), true);
+  applyState(f, i); renderFlist();
+  const a = document.querySelector(`.ln[data-ex="${LETTERS[i]}"]`);
+  if (a) showPop(f, i, a, true);
   maybeSubmitFix();
 }
 function maybeSubmitFix() {
@@ -382,66 +495,63 @@ function maybeSubmitFix() {
     body: JSON.stringify({ run: runDir, dismiss }) }).catch(() => {});
 }
 
-/* ---------- findings ---------- */
+/* ---------- findings + insertions ---------- */
 async function loadFindings() {
   try {
     findings = await fetch('/' + runDir + '/findings.json').then(r => r.json());
-    ceremonyShow(false);
+    running = false;
     if (!findings.length) {
-      $('docsub').textContent = 'Nothing survived adversarial review.';
+      pill(true, 'complete — nothing survived review', true);
+      $('findchip').style.display = 'none';
       setBtn('idle');
       return;
     }
+    pill(true, `<b>${findings.length}</b> findings — in the chart`, true);
     $('findchip').style.display = 'inline-block';
     $('findchip').textContent =
-      `${findings.length} findings — each needs a decision`;
+      `${findings.length} findings survived review — each needs a decision`;
+    $('findchip').onclick = () => selectTab('plan');
     inkMarks();
     if (!sawFixEvents) setBtn('decide');
   } catch (err) {}
 }
+let pendingIns = [];
 function insertOrder(text) {
+  if (!docLoaded) { pendingIns.push(text); return; }
   const d = document.createElement('div');
   d.className = 'ins';
   d.innerHTML = `<span class="tag">+ ORDER ADDED BY CLINICIAN</span>${text}`;
-  if (planSection && planSection.parentNode)
-    planSection.parentNode.insertBefore(d, planSection.nextSibling);
-  else $('doc').appendChild(d);
-  planSection = d;
+  if (insCursor && insCursor.parentNode)
+    insCursor.parentNode.insertBefore(d, insCursor.nextSibling);
+  else if (planPane) planPane.insertBefore(d, $('planextras'));
+  insCursor = d;
 }
+function flushIns() { const q = pendingIns; pendingIns = []; q.forEach(insertOrder); }
 
 /* ---------- events ---------- */
 function handle(e) {
   switch (e.type) {
     case 'attack_begin':
       if (!attackTotal) attackTotal = e.agents;
-      $('celanes').innerHTML = ''; cagents = {};
-      killn = 0; $('ckilln').textContent = 0; $('clast').innerHTML = '';
-      $('cerecount').textContent = e.agents;
-      $('cerephase').textContent =
-        `attack — ${e.agents} reviewers across ${e.lanes} dimensions · chart prefix cached`;
-      if (running) ceremonyShow(true);
+      killn = 0; agentsLive = 0;
+      pill(true, `launching ${e.agents} reviewers · ${e.lanes} dimensions`);
       break;
-    case 'attacker_start': ceremonyAgent(e.agent, e.lane).classList.add('live'); break;
-    case 'objection': { const d = ceremonyAgent(e.agent, e.lane);
-      d.className = 'cagent obj'; d.title = e.claim || ''; break; }
-    case 'no_objection': ceremonyAgent(e.agent, e.lane).className = 'cagent dead'; break;
+    case 'attacker_start': agentsLive++; break;
+    case 'objection':
+      pill(true, `${agentsLive} attacking · <b>${killn}</b> refuted`);
+      break;
     case 'judge_begin':
-      $('cerephase').textContent =
-        `judge — ${e.objections} objections · four tests · default kill`;
+      pill(true, `judge — ${e.objections} objections · default kill`);
       break;
     case 'gate_begin':
-      $('cerephase').textContent =
-        `confirmation gate — ${e.candidates} single-source candidate(s)`;
+      pill(true, `confirmation gate — ${e.candidates} candidate(s)`);
       break;
-    case 'killed': {
-      ceremonyAgent(e.agent, e.lane).className = 'cagent dead';
-      killn++; $('ckilln').textContent = killn;
-      $('clast').innerHTML =
-        `<span class="test">${e.test}</span> ${(e.why || '').slice(0, 110)}`;
-      break; }
-    case 'survivor': ceremonyAgent(e.agent, e.lane).className = 'cagent surv'; break;
+    case 'killed':
+      killn++;
+      pill(true, `judging · <b>${killn}</b> refuted — ${e.test}`);
+      break;
     case 'cluster_done':
-      $('cerephase').textContent = `${e.findings} distinct finding(s) — verifying receipts…`;
+      pill(true, `${e.findings} finding(s) — verifying receipts…`);
       break;
     case 'receipts_enforced': loadFindings(); break;
     case 'meter':
@@ -452,44 +562,49 @@ function handle(e) {
       insertOrder(e.order);
       const f = findings.find(x => x.id === e.finding);
       if (f) { f._state = 'fixed'; applyState(f, findings.indexOf(f)); }
+      renderFlist(); inkMarks();
       break; }
     case 'covered': {
       sawFixEvents = true;
       const f = findings.find(x => x.id === e.finding);
       if (f) { f._state = 'fixed'; applyState(f, findings.indexOf(f)); }
-      break; }
+      renderFlist(); break; }
     case 'dismissed': {
       sawFixEvents = true;
       const f = findings.find(x => x.id === e.finding);
       if (f) { f._state = 'dismissed'; f._why = e.rationale;
         applyState(f, findings.indexOf(f)); }
-      break; }
+      renderFlist(); break; }
     case 'amendment_written':
-      $('findchip').textContent = `plan amended — ${e.orders} orders · not yet re-verified`;
+      $('findchip').textContent =
+        `plan amended — ${e.orders} orders · not yet re-verified`;
       if (meta) meta.chart = runDir + '/amended-chart.md';
       setBtn('rerun');
+      pill(true, 'plan amended — re-run required', true);
       break;
     case 'reverify_begin':
       running = true;
       setBtn('rerunning');
+      pill(true, 're-attacking the fixed dimensions…');
       break;
     case 'banner': {
-      ceremonyShow(false); running = false;
+      running = false;
       const stats = (e.text.split(' — ')[1] || '')
         .replace(/ ?· attacked and not broken/, '');
       $('verifychip').style.display = 'inline-block';
       $('verifychip').innerHTML = `0 surviving objections — ${stats}
         <small>· attacked and not broken · not a safety certification</small>`;
       $('findchip').style.display = 'none';
-      $('docsub').textContent =
-        `Re-verified against the amended plan — nothing survived. Not a safety certification.`;
+      pill(true, `re-verified clean — ${stats}`, true);
+      inkMarks();
       setBtn('idle');
       break; }
     case 'residual_gaps':
-      ceremonyShow(false); running = false;
+      running = false;
       $('residchip').style.display = 'inline-block';
       $('residchip').textContent =
         `${e.count} objection(s) survived re-verification — the fix was incomplete`;
+      pill(true, `${e.count} residual gap(s)`, true);
       setBtn('rerun');
       break;
   }
@@ -506,8 +621,11 @@ $('run').onclick = async () => {
     return;
   }
   running = true; setBtn('running');
+  pill(true, 'launching…');
   const c = $('caseSel').value;
-  const body = c === 'eleanor' ? { target: 'eleanor' } : { encounter: c };
+  const body = c === 'eleanor'
+    ? { target: 'eleanor', plan_text: planEdited ? planRaw : '' }
+    : { encounter: c };
   await fetch('/api/attack', { method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body) }).catch(() => { setBtn('idle'); running = false; });
@@ -516,14 +634,12 @@ $('run').onclick = async () => {
 function resetView() {
   nLines = 0; meta = null; findings = []; decisions = {};
   fixSubmitted = false; sawFixEvents = false; docLoaded = false;
-  cagents = {}; killn = 0; attackTotal = 0; pinned = null;
-  $('doc').innerHTML = ''; $('celanes').innerHTML = '';
-  $('ckilln').textContent = '0'; $('clast').innerHTML = '';
+  killn = 0; agentsLive = 0; attackTotal = 0; pinned = null;
+  planRaw = ''; planEdited = false; insCursor = null; pendingIns = [];
   $('pop').style.display = 'none';
   $('verifychip').style.display = 'none'; $('residchip').style.display = 'none';
   $('findchip').style.display = 'none';
   $('meter').textContent = '0s · $0.00';
-  $('docsub').textContent = 'Draft — not yet attacked';
 }
 async function latest() {
   if (runDir && nLines === 0 && !meta) return runDir;
@@ -536,11 +652,7 @@ async function poll() {
     if (rd !== runDir) { runDir = rd; resetView(); }
     if (!meta) {
       meta = await fetch('/' + runDir + '/meta.json').then(r => r.json()).catch(() => null);
-      if (meta) {
-        $('doctitle').textContent = meta.encounter
-          ? meta.encounter : 'Discharge Summary — Vance, Eleanor';
-        loadDoc();
-      }
+      if (meta) loadDoc();
     }
     const txt = await fetch('/' + runDir + '/events.jsonl').then(r => r.text()).catch(() => '');
     const lines = txt.split('\n').filter(Boolean);
@@ -551,6 +663,7 @@ async function poll() {
   }
   setTimeout(poll, 400);
 }
+buildTabs();
 setBtn('idle');
 poll();
 </script>

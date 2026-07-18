@@ -66,7 +66,19 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             if self.path == "/api/attack":
                 if body.get("target") == "eleanor":
-                    cmd = [cli, "run", "assets/chart-eleanor-vance.md"]
+                    chart = "assets/chart-eleanor-vance.md"
+                    plan = str(body.get("plan_text", "")).strip()
+                    if plan:  # physician edited the plan — attack the edited version
+                        import re
+                        src = (ROOT / chart).read_text()
+                        new = re.sub(
+                            r"(## DISCHARGE ORDER \+ SUMMARY DRAFT[^\n]*\n)(.*?)(?=\n<!--|\Z)",
+                            lambda m: m.group(1) + plan + "\n", src, flags=re.S)
+                        edited = ROOT / "runs" / f"_edited-{stamp}.md"
+                        edited.parent.mkdir(exist_ok=True)
+                        edited.write_text(new)
+                        chart = str(edited)
+                    cmd = [cli, "run", chart]
                 else:
                     cmd = [cli, "run", "--encounter", str(body["encounter"])]
                     summary = str(body.get("summary", "")).strip()
