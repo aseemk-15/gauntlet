@@ -109,10 +109,40 @@ def judge_all(run, chart, objections: list[dict], strict_note: str = "") -> list
     return verdicts
 
 
+SINGLETON_GATE_NOTE = """CONFIRMATION GATE — MAXIMUM STRICTNESS. This finding was raised
+by only ONE attacker in the whole swarm (single-source; multi-agent findings skip this
+gate). Presume it should be killed. Confirm survival ONLY if the gap is unambiguous,
+material tonight, and clearly not covered anywhere in the chart. Judgment calls within
+accepted practice, access/logistics speculation, and monitoring preferences die here."""
+
+
+def singleton_gate(run, chart, findings: list[dict]) -> list[dict]:
+    """Calibration: multi-agent support is a confidence tier. Singleton findings face a
+    second maximum-strictness pass; survivors render with a single-source badge."""
+    kept = []
+    for f in findings:
+        if f.get("found_by", 0) != 1:
+            kept.append(f)
+            continue
+        obj = {"agent": f"gate:{f['id']}", "lane": f.get("id"),
+               "claim": f.get("claim"), "quotes": f.get("quotes"),
+               "missing": f.get("missing"), "proposed_order": f.get("proposed_order")}
+        v = judge_objection(run, chart, obj, strict_note=SINGLETON_GATE_NOTE)
+        if v["verdict"] == "survive":
+            kept.append(f | {"gate": "confirmed"})
+        else:
+            run.emit("gate_killed", finding=f["id"],
+                     why=str(v.get("reasoning", ""))[:110])
+    return kept
+
+
 CLUSTER_ROLE = """You cluster surviving objections from an adversarial discharge review
 into DISTINCT findings. Two objections belong to the same finding if they describe the
 same underlying gap in the plan (same harm pathway, same missing order), even if worded
-differently or found via different lanes. Do not merge genuinely different gaps.
+differently or found via different lanes. Two objections that would be closed by the
+same set of orders in the same care domain (e.g. "no weight monitoring" and "diuretic
+unchanged above dry weight" are both the volume-management gap) are ONE finding — state
+both facets in its claim. Do not merge genuinely different gaps.
 
 For each cluster, synthesize the single strongest statement of the finding, choose the
 best verbatim quotes (copy them EXACTLY as given), and the single best proposed order.

@@ -100,7 +100,7 @@ def render_card(f: dict, total: int = 30, width: int = 78) -> str:
 def apply_fixes(run, chart, findings: list[dict], decisions: dict[str, str]) -> dict:
     """decisions: finding id -> 'accept' | 'dismiss:<rationale>'. Emits order artifacts,
     authors the superseding amendment, writes the amended chart. Returns manifest."""
-    orders, fixed_ids, dismissed = [], [], []
+    orders, fixed_ids, dismissed, applied = [], [], [], set()
     for f in findings:
         d = decisions.get(f["id"], "accept")
         if d.startswith("dismiss"):
@@ -115,6 +115,10 @@ def apply_fixes(run, chart, findings: list[dict], decisions: dict[str, str]) -> 
             run.emit("dismissed", finding=f["id"], rationale="no matching fix template")
             continue
         fixed_ids.append(f["id"])
+        if fix in applied:  # same fix domain already ordered — don't double-emit
+            run.emit("covered", finding=f["id"], by=fix)
+            continue
+        applied.add(fix)
         for text in FIXES[fix]["orders"]:
             order = {"order_id": f"ORD-{len(orders)+1:03d}", "finding": f["id"],
                      "order": text, "status": "transmitted",

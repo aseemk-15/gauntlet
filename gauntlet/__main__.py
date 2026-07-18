@@ -7,7 +7,7 @@ from .attack import fan_out
 from .chart import load_chart
 from .events import Run
 from .fixloop import apply_fixes, render_card
-from .judge import cluster, judge_all
+from .judge import cluster, judge_all, singleton_gate
 from .lanes import AGENTS_PER_LANE, DISCHARGE_LANES
 from .severity import classify
 
@@ -50,7 +50,8 @@ def main(argv=None):
         objections = [r for r in results if r.get("objection")]
         verdicts = judge_all(run, chart, objections)
         survivors = [v for v in verdicts if v["verdict"] == "survive"]
-        findings = [classify(f) for f in cluster(run, survivors)]
+        findings = singleton_gate(run, chart,
+                                  [classify(f) for f in cluster(run, survivors)])
         (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
         (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
         (run.dir / "meta.json").write_text(json.dumps({"chart": str(args.chart)}))
@@ -79,7 +80,8 @@ def do_ambient(key: str):
     objections = [r for r in results if r.get("objection")]
     verdicts = judge_all(run, chart, objections, strict_note=AMBIENT_JUDGE_NOTE)
     survivors = [v for v in verdicts if v["verdict"] == "survive"]
-    findings = [classify(f) for f in cluster(run, survivors)]
+    findings = singleton_gate(run, chart,
+                              [classify(f) for f in cluster(run, survivors)])
     (run.dir / "verdicts.json").write_text(json.dumps(verdicts, indent=2))
     (run.dir / "findings.json").write_text(json.dumps(findings, indent=2))
     print(f"\n{len(objections)} attacks → {len(survivors)} survived review → "

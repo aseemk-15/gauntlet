@@ -230,6 +230,10 @@ function handle(e) {
       fixedIds.add(e.finding);
       const c = $('card-' + e.finding); if (c) c.classList.add('fixed');
       break; }
+    case 'covered': {
+      fixedIds.add(e.finding);
+      const c = $('card-' + e.finding); if (c) c.classList.add('fixed');
+      break; }
     case 'dismissed': {
       if ($('orders').firstChild && $('orders').firstChild.tagName === 'SPAN')
         $('orders').innerHTML = '';
