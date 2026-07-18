@@ -31,32 +31,56 @@ class Handler(SimpleHTTPRequestHandler):
             self.path = "/ui/index.html"
         super().do_GET()
 
-    def do_POST(self):
-        if self.path != "/api/attack":
-            self.send_error(404)
-            return
-        length = int(self.headers.get("Content-Length", 0))
-        try:
-            body = json.loads(self.rfile.read(length))
-            encounter = str(body["encounter"])
-            summary = str(body.get("summary", "")).strip()
-        except (json.JSONDecodeError, KeyError):
-            self.send_error(400, "expected JSON {encounter, summary}")
-            return
-        stamp = time.strftime("%Y%m%d-%H%M%S")
-        cmd = [str(ROOT / "gauntlet-cli"), "run", "--encounter", encounter]
-        if summary:
-            sub = ROOT / "runs" / f"_submitted-{stamp}.md"
-            sub.parent.mkdir(exist_ok=True)
-            sub.write_text(summary)
-            cmd += ["--summary", str(sub)]
-        log = open(ROOT / "runs" / f"_submitted-{stamp}.log", "w")
+    def _spawn(self, cmd, stamp):
+        (ROOT / "runs").mkdir(exist_ok=True)
+        log = open(ROOT / "runs" / f"_ui-{stamp}.log", "w")
         subprocess.Popen(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
-        payload = json.dumps({"ok": True, "launched": cmd[2:]}).encode()
+        payload = json.dumps({"ok": True, "launched": cmd[1:]}).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(payload)
+
+    def _run_dir(self, body):
+        rd = str(body.get("run", ""))
+        if not rd.startswith("runs/") or ".." in rd or not (ROOT / rd).is_dir():
+            raise ValueError(rd)
+        return rd
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        try:
+            body = json.loads(self.rfile.read(length))
+        except json.JSONDecodeError:
+            self.send_error(400, "expected JSON")
+            return
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        cli = str(ROOT / "gauntlet-cli")
+        try:
+            if self.path == "/api/attack":
+                if body.get("target") == "eleanor":
+                    cmd = [cli, "run", "assets/chart-eleanor-vance.md"]
+                else:
+                    cmd = [cli, "run", "--encounter", str(body["encounter"])]
+                    summary = str(body.get("summary", "")).strip()
+                    if summary:
+                        sub = ROOT / "runs" / f"_submitted-{stamp}.md"
+                        sub.parent.mkdir(exist_ok=True)
+                        sub.write_text(summary)
+                        cmd += ["--summary", str(sub)]
+            elif self.path == "/api/fix":
+                cmd = [cli, "fix", self._run_dir(body)]
+                for d in body.get("dismiss", []):
+                    cmd += ["--dismiss", f"{d['id']}:{d.get('rationale', 'clinician judgment')}"]
+            elif self.path == "/api/reverify":
+                cmd = [cli, "reverify", self._run_dir(body)]
+            else:
+                self.send_error(404)
+                return
+        except (KeyError, ValueError, TypeError):
+            self.send_error(400, "bad request body")
+            return
+        self._spawn(cmd, stamp)
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")

@@ -15,44 +15,59 @@
   *{box-sizing:border-box;margin:0}
   html{background:var(--bg)}
   body{background:var(--bg);color:var(--txt);font-family:var(--sans);
-       font-size:14px;line-height:1.5;padding:0}
-  .wrap{max-width:1240px;margin:0 auto;padding:18px 24px 48px}
-  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-       border-bottom:1px solid var(--line);padding-bottom:13px}
+       font-size:14px;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 24px 48px}
+  .top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+       border-bottom:1px solid var(--line);padding-bottom:14px}
   .wordmark{font-family:var(--mono);font-weight:700;font-size:18px;letter-spacing:.18em}
   .wordmark span{color:var(--acc)}
   .chip{font-family:var(--mono);font-size:11.5px;color:var(--mut);
         border:1px solid var(--line);border-radius:3px;padding:4px 9px;
         background:var(--panel2)}
   .chip b{color:var(--txt);font-weight:600}
-  .chip.mode{margin-left:auto;color:#08222B;background:var(--acc);
-             border-color:var(--acc);font-weight:700;letter-spacing:.1em}
-  .meter{display:flex;gap:26px;flex-wrap:wrap;font-family:var(--mono);
-         font-variant-numeric:tabular-nums;margin:14px 0 6px}
+  .modes{margin-left:auto;display:flex;border:1px solid var(--line);
+         border-radius:3px;overflow:hidden}
+  .modes button{font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+                background:var(--panel2);color:var(--mut);border:0;
+                padding:6px 12px;cursor:pointer}
+  .modes button.on{background:var(--acc);color:#08222B;font-weight:700}
+  .modes button:focus-visible,.btn:focus-visible,.fix:focus-visible{
+    outline:2px solid var(--acc);outline-offset:2px}
+  .meter{display:flex;gap:22px;font-family:var(--mono);
+         font-variant-numeric:tabular-nums;margin:14px 0 18px;flex-wrap:wrap}
   .m .k{font-size:10px;letter-spacing:.16em;color:var(--mut);text-transform:uppercase}
   .m .v{font-size:21px;font-weight:700}
   .m .v.red{color:var(--red)} .m .v.grn{color:var(--grn)} .m .v.acc{color:var(--acc)}
-  #phase{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--amb);
-         min-height:16px;margin:0 0 14px;text-transform:uppercase}
-  .main{display:grid;grid-template-columns:minmax(430px,1fr) minmax(380px,1fr);gap:20px}
-  @media(max-width:920px){.main{grid-template-columns:1fr}}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
-         padding:15px;margin-bottom:16px}
+  .main{display:grid;grid-template-columns:minmax(430px,1fr) minmax(360px,.9fr);gap:22px}
+  @media(max-width:900px){.main{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px}
   .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--mut);
            text-transform:uppercase;margin:0 0 10px}
-  /* plan under attack */
-  .plan{font-family:var(--mono);font-size:12px;background:var(--panel2);
-        border:1px solid var(--line);border-radius:3px;padding:11px 12px;
-        margin-bottom:13px;white-space:pre-wrap;color:var(--mut)}
-  .plan .hd{color:var(--acc);font-weight:700;margin-bottom:5px;white-space:normal}
+  /* plan card */
+  .plan{font-family:var(--mono);font-size:12.5px;color:var(--txt);
+        background:var(--panel2);border:1px solid var(--line);border-radius:3px;
+        padding:12px;margin-bottom:14px}
+  .plan .hd{color:var(--acc);font-weight:700;margin-bottom:6px}
+  .plan .body{color:var(--mut);white-space:pre-wrap}
+  select,textarea{width:100%;background:var(--panel2);color:var(--txt);
+    border:1px solid var(--line);border-radius:3px;padding:8px;
+    font:12px var(--mono);margin-bottom:8px}
+  .btn{font-family:var(--mono);font-size:13px;letter-spacing:.12em;font-weight:700;
+       width:100%;padding:12px;border-radius:3px;border:1px solid var(--acc);
+       background:transparent;color:var(--acc);cursor:pointer}
+  .btn:hover{background:rgba(79,195,224,.08)}
+  .btn[disabled]{opacity:.35;cursor:default}
+  .btn.rerun{border-color:var(--amb);color:var(--amb)}
+  .btn.rerun:hover{background:rgba(226,163,60,.08)}
   /* lane grid */
-  .lanes{display:flex;flex-direction:column;gap:5px}
-  .lane{display:grid;grid-template-columns:158px 1fr;align-items:center;gap:10px}
+  .lanes{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+  .lane{display:grid;grid-template-columns:118px 1fr;align-items:center;gap:10px}
   .lane .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
              color:var(--dim);text-transform:uppercase;text-align:right;
              overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .cells{display:flex;gap:5px}
-  .cell{width:24px;height:24px;border-radius:2px;background:var(--panel2);
+  .cells{display:grid;grid-template-columns:repeat(var(--per-lane,3),1fr);gap:5px;
+         max-width:calc(var(--per-lane,3)*34px)}
+  .cell{aspect-ratio:1;border-radius:2px;background:var(--panel2);
         border:1px solid var(--line);
         transition:background .25s,border-color .25s,opacity .3s}
   .cell.atk{background:rgba(79,195,224,.28);border-color:var(--acc);
@@ -63,57 +78,55 @@
              box-shadow:0 0 10px rgba(229,72,77,.45);animation:none}
   @keyframes pulse{50%{background:rgba(79,195,224,.5)}}
   @media(prefers-reduced-motion:reduce){.cell{transition:none}.cell.atk{animation:none}}
-  .note{color:var(--dim);font-size:11px;font-family:var(--mono);margin-top:12px}
-  /* verdict cards */
-  .empty{color:var(--dim);font-family:var(--mono);font-size:12px;padding:24px 8px;
+  /* verdicts */
+  .empty{color:var(--dim);font-family:var(--mono);font-size:12px;padding:26px 8px;
          text-align:center;border:1px dashed var(--line);border-radius:3px}
   .card{border:1px solid var(--red);border-left:3px solid var(--red);border-radius:3px;
-        background:var(--panel2);padding:12px 14px;margin-bottom:12px;cursor:pointer}
+        background:var(--panel2);padding:12px 14px;margin-bottom:12px}
   .card.fixed{border-color:var(--amb);border-left-color:var(--amb)}
-  .card.dismissed{border-color:var(--line);border-left-color:var(--dim);opacity:.6}
+  .card.dismissed{border-color:var(--line);border-left-color:var(--dim);opacity:.65}
   .card .lanechip{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
                   color:var(--red);text-transform:uppercase}
   .card.fixed .lanechip{color:var(--amb)}
-  .card h3{margin:5px 0 7px;font-size:14.5px;font-weight:650;text-wrap:balance}
-  .badge{display:inline-block;font-family:var(--mono);font-size:10px;color:var(--acc);
-         border:1px solid var(--acc);border-radius:8px;padding:0 8px;margin:0 0 6px}
-  .cite{font-family:var(--mono);font-size:10px;color:var(--mut);margin-bottom:2px}
-  .cite.ok{color:var(--grn)}
+  .card h3{margin:5px 0 8px;font-size:14.5px;font-weight:650;letter-spacing:0;
+           text-wrap:balance;cursor:pointer}
+  .card h3:hover{color:var(--acc)}
+  .badge{font-family:var(--mono);font-size:10px;color:var(--acc);margin:0 0 4px}
+  .cite{font-family:var(--mono);font-size:10px;color:var(--mut)}
+  .cite.ok{color:var(--grn);margin-bottom:2px}
   .rcpt{font-family:var(--mono);font-size:11.5px;color:var(--mut);
         border-left:2px solid var(--line);padding:2px 0 2px 10px;margin:6px 0}
+  .rcpt b{color:var(--txt);font-weight:600}
   .rcpt .src{color:var(--acc)}
-  .order{font-family:var(--mono);font-size:11.5px;color:var(--grn);margin-top:7px}
-  .statusrow{font-family:var(--mono);font-size:11px;color:var(--amb);margin-top:8px}
-  /* orders + kill log */
-  #orders div{font-family:var(--mono);font-size:11.5px;color:var(--grn);padding:1.5px 0}
-  #orders div.dismissed{color:var(--dim)}
+  .fixrow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .fix{font-family:var(--mono);font-size:11px;letter-spacing:.08em;font-weight:700;
+       padding:7px 12px;border-radius:3px;border:1px solid var(--amb);
+       background:transparent;color:var(--amb);cursor:pointer}
+  .fix:hover{background:rgba(226,163,60,.08)}
+  .fix.dis{border-color:var(--dim);color:var(--dim)}
+  .fixed-tag{font-family:var(--mono);font-size:11px;color:var(--amb)}
+  .dis-tag{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .banner{display:none;font-family:var(--mono);text-align:center;
+          border:1px solid var(--grn);border-radius:3px;color:var(--grn);
+          padding:16px 12px;margin-bottom:12px}
+  .banner .big{font-size:16px;font-weight:700;letter-spacing:.12em}
+  .banner .sub{font-size:11px;color:var(--mut);margin-top:6px}
+  #residual{display:none;font-family:var(--mono);border:1px solid var(--red);
+            border-radius:3px;color:var(--red);padding:13px;margin-bottom:12px;
+            font-size:12.5px}
+  /* log */
+  .log{margin-top:22px}
   .loglines{font-family:var(--mono);font-size:11.5px;background:var(--panel2);
             border:1px solid var(--line);border-radius:3px;padding:10px 12px;
-            max-height:190px;overflow-y:auto}
-  .loglines div{padding:1.5px 0;color:var(--mut);
-                border-bottom:1px dashed rgba(29,41,56,.55)}
-  .loglines em{color:var(--dim);font-style:normal}
-  .loglines b{color:var(--txt);font-weight:600}
-  .loglines .test{color:var(--amb)}
-  /* banner */
-  #banner{display:none;font-family:var(--mono);text-align:center;
-          border:1px solid var(--grn);border-radius:3px;color:var(--grn);
-          padding:16px 12px;margin-bottom:16px}
-  #banner .big{font-size:16px;font-weight:700;letter-spacing:.12em}
-  #banner .sub{font-size:11px;color:var(--mut);margin-top:6px}
-  #residual{display:none;font-family:var(--mono);border:1px solid var(--red);
-            border-radius:3px;color:var(--red);padding:13px;margin-bottom:16px;
-            font-size:12.5px}
-  /* paste panel */
-  select,textarea{width:100%;background:var(--panel2);color:var(--txt);
-    border:1px solid var(--line);border-radius:3px;padding:7px;
-    font:12px var(--mono);margin-bottom:7px}
-  .btn{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;font-weight:700;
-       width:100%;padding:11px;border-radius:3px;border:1px solid var(--acc);
-       background:transparent;color:var(--acc);cursor:pointer}
-  .btn:hover{background:rgba(79,195,224,.08)}
-  .btn:disabled{opacity:.35;cursor:default}
-  #attackmsg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+            height:170px;overflow-y:auto}
+  .loglines div{padding:1.5px 0;color:var(--mut)}
+  .loglines .kill em{color:var(--dim);font-style:normal}
+  .loglines .kill b{color:var(--txt);font-weight:600}
+  .loglines .kill .test{color:var(--amb)}
+  .loglines .surv b{color:var(--red)}
+  .loglines .sys{color:var(--acc)}
+  .loglines .ord{color:var(--grn)}
+  .note{color:var(--dim);font-size:11.5px;font-family:var(--mono);margin-top:10px}
   /* chart side panel */
   #chartpane{position:fixed;top:0;right:-54%;width:52%;height:100%;
              background:var(--panel);border-left:1px solid var(--line);
@@ -129,9 +142,12 @@
 <div class="wrap">
   <div class="top">
     <div class="wordmark">THE <span>GAUNTLET</span></div>
-    <div class="chip" id="runchip">RUN <b id="runid">waiting…</b></div>
-    <div class="chip" id="targetchip" style="display:none">TARGET <b id="target"></b></div>
-    <div class="chip mode" id="modechip">LIVE</div>
+    <div class="chip" id="ptchip">PT <b id="pt">—</b></div>
+    <div class="chip" id="modechip">TARGET <b id="target">—</b></div>
+    <div class="modes">
+      <button id="mDis" class="on">DISCHARGE</button>
+      <button id="mAmb">AMBIENT / SUMMARY</button>
+    </div>
   </div>
 
   <div class="meter">
@@ -140,46 +156,41 @@
     <div class="m"><div class="k">Survivors</div><div class="v red" id="mSurv">0</div></div>
     <div class="m"><div class="k">Elapsed</div><div class="v" id="mTime">0s</div></div>
     <div class="m"><div class="k">Cost</div><div class="v" id="mCost">$0.00</div></div>
-    <div class="m"><div class="k">API calls</div><div class="v" id="mCalls">0</div></div>
   </div>
-  <div id="phase"></div>
 
   <div class="main">
-    <div>
-      <div class="panel">
-        <p class="eyebrow" id="swarmhead">attack swarm</p>
-        <div class="plan" id="plancard" style="display:none"><div class="hd">THE PLAN UNDER ATTACK</div><div id="plantext"></div></div>
-        <div class="lanes" id="grid"></div>
-        <p class="note">live agent runs — elapsed, cost, and every receipt are measured
-        and machine-verified; nothing on this page is simulated</p>
+    <div class="panel">
+      <p class="eyebrow" id="swarmhead">Attack swarm</p>
+      <div class="plan" id="plancard">
+        <div class="hd" id="planhd">PLAN UNDER ATTACK</div>
+        <div class="body" id="plantext">Run the gauntlet to load a target.</div>
       </div>
-      <div class="panel">
-        <p class="eyebrow">judge — kill log</p>
-        <div class="loglines" id="killlog"></div>
-      </div>
-    </div>
-    <div>
-      <div id="banner"><div class="big">0 SURVIVING OBJECTIONS</div><div class="sub"></div></div>
-      <div id="residual"></div>
-      <div class="panel">
-        <p class="eyebrow">surviving objections — receipts or death</p>
-        <div id="cards"><div class="empty">No objections yet.</div></div>
-      </div>
-      <div class="panel">
-        <p class="eyebrow">clinician decisions → orders</p>
-        <div id="orders"><div class="empty">—</div></div>
-      </div>
-      <div class="panel">
-        <p class="eyebrow">attack your own summary — live run</p>
+      <div id="ambientctl" style="display:none">
         <select id="enc">
           <option value="covid-inpt">COVID inpatient admission</option>
           <option value="annual-htn">General exam — new hypertension</option>
           <option value="hospice-1">Hospice admission — end-stage colon cancer</option>
           <option value="hospice-2">Hospice admission — colon cancer + cardiac</option>
         </select>
-        <textarea id="summary" rows="7" placeholder="Paste a discharge summary for this encounter. Leave empty to attack the encounter's own note/AVS."></textarea>
-        <button class="btn" id="attackbtn" onclick="launchAttack()">▶ RUN THE GAUNTLET</button>
-        <span id="attackmsg"></span>
+        <textarea id="summary" rows="6" placeholder="Optional: paste a discharge summary to attack against this encounter's grounding record. Empty = attack the encounter's own note/AVS."></textarea>
+      </div>
+      <div class="lanes" id="lanes"></div>
+      <div style="margin-top:14px"><button class="btn" id="run">▶ RUN THE GAUNTLET</button></div>
+      <p class="note" id="runmsg">live agent runs — every number measured, every receipt
+      machine-verified verbatim; nothing simulated</p>
+    </div>
+
+    <div class="panel">
+      <p class="eyebrow">Surviving objections — receipts or death</p>
+      <div class="banner" id="banner">
+        <div class="big">0 SURVIVING OBJECTIONS</div>
+        <div class="sub" id="bannersub"></div>
+      </div>
+      <div id="residual"></div>
+      <div id="verdicts"><div class="empty">No objections yet. Run the gauntlet.</div></div>
+      <div class="log">
+        <p class="eyebrow">Judge — kill log</p>
+        <div class="loglines" id="log"></div>
       </div>
     </div>
   </div>
@@ -192,21 +203,33 @@ const $ = id => document.getElementById(id);
 const pane = $('chartpane');
 let runDir = new URLSearchParams(location.search).get('run');
 let nLines = 0, tiles = {}, meta = null, attackTotal = 0;
-let fixedIds = new Set(), dismissedIds = new Set();
+let mode = 'discharge';
 let nAtk = 0, nKill = 0, nSurv = 0;
+let decisions = {}, findingsShown = [], fixSubmitted = false, sawFixEvents = false;
 
-const norm = s => s.replace(/[—–−]/g, '-').replace(/[‘’]/g, "'")
-                   .replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
-
-async function latest() {
-  if (runDir) return runDir;
-  const r = await fetch('/api/latest').then(r => r.json()).catch(() => null);
-  return r && r.run;
+function setBtn(state) {
+  const b = $('run');
+  const S = {
+    idle:   [false, 'btn', '▶ RUN THE GAUNTLET'],
+    running:[true,  'btn', 'RUNNING…'],
+    decide: [true,  'btn', 'AWAITING CLINICIAN DECISIONS…'],
+    fixing: [true,  'btn', 'PLACING ORDERS…'],
+    rerun:  [false, 'btn rerun', '⟳ RE-RUN THE GAUNTLET'],
+    rerunning:[true,'btn rerun', 'RE-RUNNING…'],
+  }[state];
+  b.disabled = S[0]; b.className = S[1]; b.textContent = S[2];
+  b.dataset.state = state;
 }
 
 function setMeters() {
   $('mAtk').textContent = nAtk; $('mKill').textContent = nKill;
   $('mSurv').textContent = nSurv;
+}
+
+function log(html, cls) {
+  const d = document.createElement('div');
+  d.className = cls || ''; d.innerHTML = html;
+  $('log').appendChild(d); $('log').scrollTop = $('log').scrollHeight;
 }
 
 function tile(agent, lane) {
@@ -215,8 +238,8 @@ function tile(agent, lane) {
   if (!row) {
     const l = document.createElement('div');
     l.className = 'lane'; l.dataset.lane = lane;
-    l.innerHTML = `<div class="lab">${lane}</div><div class="cells"></div>`;
-    $('grid').appendChild(l);
+    l.innerHTML = `<div class="lab">${lane.replace(/-/g, ' ')}</div><div class="cells"></div>`;
+    $('lanes').appendChild(l);
     row = l.querySelector('.cells');
   }
   const t = document.createElement('div');
@@ -232,24 +255,25 @@ function setTile(agent, lane, cls, tip) {
   if (tip) t.title = tip;
 }
 
-function killRow(e) {
-  const d = document.createElement('div');
-  d.innerHTML = `<em>[judge]</em> <b>${e.agent}</b> — failed ` +
-    `<span class="test">${e.test}</span>: ${(e.why || '').slice(0, 120)}`;
-  $('killlog').prepend(d);
-}
+const norm = s => s.replace(/[—–−]/g, '-').replace(/\s+/g, ' ').trim();
 
 async function loadPlan() {
   if (!meta || !meta.chart) return;
   try {
     const txt = await fetch('/' + meta.chart).then(r => r.text());
-    const m = txt.match(/^##+ .*UNDER ATTACK.*$/m);
-    if (!m) return;
-    const start = txt.indexOf(m[0]) + m[0].length;
-    let body = txt.slice(start).split(/\n##? /)[0].trim()
-                  .split('\n').slice(0, 7).join('\n');
-    $('plantext').textContent = body;
-    $('plancard').style.display = 'block';
+    const stripped = txt.replace(/<!--[\s\S]*?-->/g, '');
+    const demo = stripped.match(/^- ([A-Z][^.\n]{4,60})[.,]/m);
+    if (demo) $('pt').textContent = demo[1];
+    const m = stripped.match(/^##+ (.*UNDER ATTACK.*)$/m);
+    if (m) {
+      $('target').textContent = m[1].replace(/[—-]? ?THE PLAN UNDER ATTACK/i, '')
+                                    .replace(/^#+ /, '').slice(0, 52);
+      const start = stripped.indexOf(m[0]) + m[0].length;
+      $('plantext').textContent = stripped.slice(start).split(/\n## /)[0]
+                                          .trim().split('\n').slice(0, 7).join('\n');
+      $('planhd').textContent = 'THE PLAN UNDER ATTACK';
+    }
+    if (meta.encounter) $('target').textContent = meta.encounter.slice(0, 52);
   } catch (err) {}
 }
 
@@ -270,169 +294,224 @@ async function showReceipts(f) {
   }
   $('charttext').innerHTML = html;
   pane.classList.add('open');
-  const m = pane.querySelector('mark');
-  if (m) m.scrollIntoView({ block: 'center' });
+  const mk = pane.querySelector('mark');
+  if (mk) mk.scrollIntoView({ block: 'center' });
+}
+
+function maybeSubmitFix() {
+  if (fixSubmitted || !findingsShown.length) return;
+  if (findingsShown.some(f => !decisions[f.id])) return;
+  fixSubmitted = true;
+  setBtn('fixing');
+  const dismiss = findingsShown
+    .filter(f => decisions[f.id] === 'dismiss')
+    .map(f => ({ id: f.id, rationale: 'clinician judgment — no order tonight' }));
+  log('[system] clinician decisions complete — placing orders + amending plan', 'sys');
+  fetch('/api/fix', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ run: runDir, dismiss }) })
+    .catch(() => log('[system] fix launch failed', 'sys'));
 }
 
 function card(f) {
   const el = document.createElement('div');
-  el.className = 'card' + (fixedIds.has(f.id) ? ' fixed' : '')
-                        + (dismissedIds.has(f.id) ? ' dismissed' : '');
-  el.id = 'card-' + f.id;
-  const single = f.found_by === 1 ? ' · SINGLE-SOURCE' : '';
-  const gate = f.gate === 'confirmed' ? ' · GATE-CONFIRMED' : '';
+  el.className = 'card'; el.id = 'card-' + f.id;
+  const lane = (f.members && f.members[0] || '').split('#')[0].replace(/-/g, ' ');
+  const single = f.found_by === 1 ? ' · single-source' : '';
+  const gate = f.gate === 'confirmed' ? ' · gate-confirmed' : '';
   el.innerHTML =
-    `<div class="lanechip">■ ${f.tier_label || ''}</div>` +
-    `<h3>${f.title}</h3>` +
-    `<span class="badge">found independently by ${f.found_by} of ${attackTotal || 30}${single}${gate}</span>` +
+    `<div class="lanechip">■ ${lane ? 'LANE: ' + lane + ' · ' : ''}${f.tier_label || ''}</div>` +
+    `<h3 title="click for chart receipts">${f.title}</h3>` +
+    `<div class="badge">found independently by ${f.found_by} of ${attackTotal || 30}${single}${gate}</div>` +
     `<div class="cite">${f.citation || ''}</div>` +
     (f.receipts_verified ?
       `<div class="cite ok">receipts machine-verified verbatim ✓</div>` : '') +
     (f.quotes || []).slice(0, 3).map(q =>
       `<div class="rcpt"><span class="src">${q.section}</span> — “${(q.quote || '').slice(0, 120)}”</div>`).join('') +
-    `<div class="order">▸ ${f.proposed_order || ''}</div>` +
-    (fixedIds.has(f.id) ?
-      `<div class="statusrow">✓ orders placed by clinician — unverified until re-run</div>` : '');
-  el.onclick = () => showReceipts(f);
+    `<div class="rcpt"><span class="src">proposed</span> — <b>${(f.proposed_order || '').slice(0, 160)}</b></div>` +
+    `<div class="fixrow"><button class="fix" data-act="fix">PLACE ORDERS</button>` +
+    `<button class="fix dis" data-act="dismiss">DISMISS — DOCUMENT RATIONALE</button></div>`;
+  el.querySelector('h3').onclick = () => showReceipts(f);
+  el.querySelectorAll('.fix').forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    if (fixSubmitted || sawFixEvents) return;
+    decisions[f.id] = b.dataset.act;
+    const row = el.querySelector('.fixrow');
+    if (b.dataset.act === 'fix') {
+      el.className = 'card fixed';
+      row.innerHTML = '<span class="fixed-tag">✓ orders queued — transmitted on decision-complete</span>';
+    } else {
+      el.className = 'card dismissed';
+      row.innerHTML = '<span class="dis-tag">✗ dismissed — rationale documented</span>';
+    }
+    maybeSubmitFix();
+  });
   return el;
 }
 
 async function loadFindings() {
   try {
     const fs = await fetch('/' + runDir + '/findings.json').then(r => r.json());
-    $('cards').innerHTML = '';
-    for (const f of fs) $('cards').appendChild(card(f));
+    findingsShown = fs;
+    $('verdicts').innerHTML = '';
+    if (!fs.length) {
+      $('verdicts').innerHTML = '<div class="empty">Nothing survived review.</div>';
+      setBtn('idle');
+      return;
+    }
+    for (const f of fs) $('verdicts').appendChild(card(f));
+    if (!sawFixEvents) setBtn('decide');
   } catch (err) {}
+}
+
+function stripFixRow(id, html) {
+  const c = $('card-' + id);
+  if (!c) return;
+  const row = c.querySelector('.fixrow');
+  if (row) row.innerHTML = html;
 }
 
 function handle(e) {
   switch (e.type) {
     case 'attack_begin':
       if (!attackTotal) attackTotal = e.agents;
-      $('grid').innerHTML = ''; tiles = {};
+      $('lanes').innerHTML = ''; tiles = {};
+      document.documentElement.style.setProperty('--per-lane',
+        Math.round(e.agents / e.lanes));
       nAtk = 0; nKill = 0; nSurv = 0; setMeters();
       $('swarmhead').textContent =
-        `attack swarm — ${e.lanes} lanes · ${e.agents} agents`;
-      $('phase').textContent = `attack — ${e.agents} agents launched · chart prefix cached`;
+        `Attack swarm — ${e.lanes} lanes × ${Math.round(e.agents / e.lanes)} agents`;
+      log(`[system] ${e.agents} attackers launched · shared chart prefix cached`, 'sys');
       break;
     case 'reverify_begin':
-      $('phase').textContent = `targeted re-verification — ${e.targets}`;
-      $('killlog').innerHTML = '';
+      setBtn('rerunning');
+      log(`[system] re-running ONLY the fixed findings' lanes against the amended plan`, 'sys');
       break;
     case 'attacker_start': tile(e.agent, e.lane).classList.add('atk');
       nAtk++; setMeters(); break;
     case 'objection': setTile(e.agent, e.lane, 'obj', e.claim || ''); break;
     case 'no_objection': setTile(e.agent, e.lane, 'dead', 'conceded'); break;
     case 'judge_begin':
-      $('phase').textContent = `judge — ${e.objections} objections · four tests · default kill`;
+      log(`[system] judge engaged — ${e.objections} objections · four tests · default kill`, 'sys');
       break;
     case 'gate_begin':
-      $('phase').textContent = `confirmation gate — ${e.candidates} candidate(s) · max strictness`;
+      log(`[system] confirmation gate — ${e.candidates} candidate(s) at max strictness`, 'sys');
       break;
     case 'killed':
       setTile(e.agent, e.lane, 'dead', e.why || '');
-      nKill++; setMeters(); killRow(e); break;
+      nKill++; setMeters();
+      log(`<em>[judge]</em> <b>${e.agent}</b> — REFUTED <span class="test">(${e.test})</span>: ${(e.why || '').slice(0, 110)}`, 'kill');
+      break;
     case 'survivor':
       setTile(e.agent, e.lane, 'surv', e.why || '');
-      nSurv++; setMeters(); break;
-    case 'cluster_done':
-      $('phase').textContent = `${e.findings} distinct findings`;
-      loadFindings(); break;
-    case 'receipts_enforced': loadFindings(); break;
+      nSurv++; setMeters();
+      log(`<b>[SURVIVOR]</b> ${e.agent} — objection enters the verdict panel`, 'surv');
+      break;
+    case 'cluster_done': case 'receipts_enforced': loadFindings(); break;
     case 'meter':
       $('mTime').textContent = e.t.toFixed(0) + 's';
       $('mCost').textContent = '$' + e.cost.toFixed(2);
-      $('mCalls').textContent = e.calls;
       break;
-    case 'order_emitted': {
-      if ($('orders').querySelector('.empty')) $('orders').innerHTML = '';
-      const d = document.createElement('div');
-      d.textContent = `✓ ${e.order} — order transmitted`;
-      $('orders').appendChild(d);
-      fixedIds.add(e.finding);
+    case 'order_emitted':
+      sawFixEvents = true;
+      log(`✓ ${e.order} — order transmitted`, 'ord');
+      stripFixRow(e.finding,
+        '<span class="fixed-tag">✓ order placed by clinician — unverified until re-run</span>');
       const c = $('card-' + e.finding);
-      if (c && !c.classList.contains('fixed')) {
-        c.classList.add('fixed');
-        c.insertAdjacentHTML('beforeend',
-          `<div class="statusrow">✓ orders placed by clinician — unverified until re-run</div>`);
-      }
-      break; }
+      if (c) c.className = 'card fixed';
+      break;
     case 'covered': {
-      fixedIds.add(e.finding);
-      const c = $('card-' + e.finding); if (c) c.classList.add('fixed');
+      sawFixEvents = true;
+      const cc = $('card-' + e.finding);
+      if (cc) cc.className = 'card fixed';
+      stripFixRow(e.finding,
+        '<span class="fixed-tag">✓ covered by orders already placed — unverified until re-run</span>');
       break; }
     case 'dismissed': {
-      if ($('orders').querySelector('.empty')) $('orders').innerHTML = '';
-      const d = document.createElement('div'); d.className = 'dismissed';
-      d.textContent = `✗ ${e.finding} dismissed — ${e.rationale}`;
-      $('orders').appendChild(d);
-      dismissedIds.add(e.finding);
-      const c = $('card-' + e.finding); if (c) c.classList.add('dismissed');
+      sawFixEvents = true;
+      log(`✗ ${e.finding} dismissed — ${e.rationale}`, 'kill');
+      const cd = $('card-' + e.finding);
+      if (cd) cd.className = 'card dismissed';
+      stripFixRow(e.finding, `<span class="dis-tag">✗ dismissed — ${e.rationale}</span>`);
       break; }
     case 'amendment_written':
-      $('phase').textContent =
-        `amendment written — supersedes ${e.supersedes} · ${e.orders} orders`;
+      log(`[system] plan amended — SUPERSEDES ${e.supersedes} · ${e.orders} orders`, 'sys');
       if (meta) meta.chart = runDir + '/amended-chart.md';
+      setBtn('rerun');
       break;
-    case 'banner':
+    case 'banner': {
       $('banner').style.display = 'block';
-      $('banner').querySelector('.big').textContent =
-        e.text.split(' — ')[0];
-      $('banner').querySelector('.sub').textContent =
-        (e.text.split(' — ')[1] || '') + ' — attacked and not broken. Not a safety certification.';
-      $('phase').textContent = '';
-      break;
+      const stats = (e.text.split(' — ')[1] || '')
+        .replace(/ ?· attacked and not broken/, '');
+      $('bannersub').textContent =
+        stats + ' — attested: attacked and not broken. Not a safety certification.';
+      log('[system] gauntlet complete — 0 surviving objections', 'sys');
+      nSurv = 0; setMeters();
+      setBtn('idle');
+      break; }
     case 'residual_gaps':
       $('residual').style.display = 'block';
       $('residual').textContent =
         `${e.count} objection(s) survived the confirmation gate — the fix was ` +
         `incomplete. That is the product working.`;
+      setBtn('rerun');
       break;
   }
 }
 
-async function launchAttack() {
-  const btn = $('attackbtn');
-  btn.disabled = true;
-  $('attackmsg').textContent = 'launching real run…';
-  try {
-    const r = await fetch('/api/attack', { method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ encounter: $('enc').value,
-                             summary: $('summary').value }) });
-    $('attackmsg').textContent = r.ok ?
-      'launched — the mission log will pick it up' : 'launch failed';
-  } catch (err) { $('attackmsg').textContent = 'launch failed: ' + err; }
-  setTimeout(() => { btn.disabled = false; }, 4000);
+function resetView() {
+  nLines = 0; tiles = {}; attackTotal = 0;
+  nAtk = 0; nKill = 0; nSurv = 0; setMeters();
+  decisions = {}; findingsShown = []; fixSubmitted = false; sawFixEvents = false;
+  $('mTime').textContent = '0s'; $('mCost').textContent = '$0.00';
+  $('lanes').innerHTML = ''; $('log').innerHTML = '';
+  $('verdicts').innerHTML = '<div class="empty">No objections yet. Run the gauntlet.</div>';
+  $('banner').style.display = 'none'; $('residual').style.display = 'none';
+  meta = null;
 }
+
+async function latest() {
+  if (runDir && nLines === 0) return runDir;
+  const r = await fetch('/api/latest').then(r => r.json()).catch(() => null);
+  return (r && r.run) || runDir;
+}
+
+$('run').onclick = async () => {
+  const state = $('run').dataset.state || 'idle';
+  if (state === 'rerun') {
+    setBtn('rerunning');
+    await fetch('/api/reverify', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ run: runDir }) }).catch(() => setBtn('rerun'));
+    return;
+  }
+  setBtn('running');
+  const body = mode === 'discharge' ? { target: 'eleanor' }
+    : { encounter: $('enc').value, summary: $('summary').value };
+  await fetch('/api/attack', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body) }).catch(() => setBtn('idle'));
+};
+
+$('mDis').onclick = () => { mode = 'discharge';
+  $('mDis').className = 'on'; $('mAmb').className = '';
+  $('ambientctl').style.display = 'none'; $('plancard').style.display = 'block'; };
+$('mAmb').onclick = () => { mode = 'ambient';
+  $('mAmb').className = 'on'; $('mDis').className = '';
+  $('ambientctl').style.display = 'block'; $('plancard').style.display = 'none'; };
 
 async function poll() {
   const rd = await latest();
   if (rd) {
-    if (rd !== runDir) {
-      runDir = rd; nLines = 0; tiles = {}; attackTotal = 0;
-      nAtk = 0; nKill = 0; nSurv = 0; setMeters();
-      fixedIds = new Set(); dismissedIds = new Set();
-      $('grid').innerHTML = ''; $('killlog').innerHTML = '';
-      $('cards').innerHTML = '<div class="empty">No objections yet.</div>';
-      $('orders').innerHTML = '<div class="empty">—</div>';
-      $('banner').style.display = 'none'; $('residual').style.display = 'none';
-      $('plancard').style.display = 'none';
-      $('runid').textContent = rd.replace('runs/', '');
-      const mode = rd.includes('summary') ? 'SUMMARY UNDER ATTACK'
-                 : rd.includes('ambient') ? 'AMBIENT' : 'DISCHARGE';
-      $('modechip').textContent = mode;
-      meta = null;
+    if (rd !== runDir) { runDir = rd; resetView(); }
+    if (nLines === 0) {
+      document.title = 'THE GAUNTLET — ' + runDir.replace('runs/', '');
+      if ((/summary|ambient/.test(runDir)) !== (mode !== 'discharge'))
+        (/summary|ambient/.test(runDir) ? $('mAmb') : $('mDis')).onclick();
     }
     if (!meta) {
       meta = await fetch('/' + runDir + '/meta.json').then(r => r.json()).catch(() => null);
-      if (meta) {
-        if (meta.encounter) {
-          $('target').textContent = meta.encounter;
-          $('targetchip').style.display = '';
-        } else $('targetchip').style.display = 'none';
-        loadPlan();
-      }
+      if (meta) loadPlan();
     }
     const txt = await fetch('/' + runDir + '/events.jsonl').then(r => r.text()).catch(() => '');
     const lines = txt.split('\n').filter(Boolean);
@@ -443,6 +522,7 @@ async function poll() {
   }
   setTimeout(poll, 400);
 }
+setBtn('idle');
 poll();
 </script>
 </body>
