@@ -156,10 +156,7 @@
       <span id="gpilltxt">attacking…</span>
     </div>
     <select id="caseSel">
-      <option value="eleanor">Vance, Eleanor — discharge 07/16</option>
-      <option value="covid-inpt">COVID inpatient (organizer data)</option>
-      <option value="annual-htn">Annual exam — new HTN (organizer data)</option>
-      <option value="hospice-1">Hospice admission (organizer data)</option>
+      <option value="eleanor">Vance, Eleanor — discharge 07/16 (hero case)</option>
     </select>
     <button class="runbtn" id="run">▶ Run the Gauntlet</button>
   </div>
@@ -663,8 +660,22 @@ async function poll() {
   }
   setTimeout(poll, 400);
 }
+async function loadCases() {
+  // every encounter in the organizer dataset becomes a runnable case
+  try {
+    const s = await fetch('/assets/abridge-dataset/summary.json').then(r => r.json());
+    for (const rec of (s.index || [])) {
+      const o = document.createElement('option');
+      o.value = rec.id;
+      o.textContent = (rec.visit_title || rec.id).slice(0, 58)
+        + ` — ${(rec.date || '').slice(0, 10)}`;
+      $('caseSel').appendChild(o);
+    }
+  } catch (err) {}
+}
 buildTabs();
 setBtn('idle');
+loadCases();
 poll();
 </script>
 </body>
