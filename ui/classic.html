@@ -214,6 +214,7 @@ const LANE_LABELS = {
   'anticoagulation': 'anticoag / inr', 'infection-course': 'infection course',
 };
 let decisions = {}, findingsShown = [], fixSubmitted = false, sawFixEvents = false;
+let fixedIds = new Set(), dismissedIds = new Set();
 
 function setBtn(state) {
   const b = $('run');
@@ -398,7 +399,10 @@ async function loadFindings() {
     }
     for (const f of fs) $('verdicts').appendChild(card(f));
     if (!sawFixEvents) setBtn('decide');
-  } catch (err) {}
+  } catch (err) {
+    // findings.json may lag the cluster_done event by a beat — retry once
+    setTimeout(loadFindings, 900);
+  }
 }
 
 function stripFixRow(id, html) {
@@ -457,6 +461,7 @@ function handle(e) {
       break;
     case 'order_emitted':
       sawFixEvents = true;
+      fixedIds.add(e.finding);
       log(`✓ ${e.order} — order transmitted`, 'ord');
       stripFixRow(e.finding,
         '<span class="fixed-tag">✓ order placed by clinician — unverified until re-run</span>');
@@ -465,6 +470,7 @@ function handle(e) {
       break;
     case 'covered': {
       sawFixEvents = true;
+      fixedIds.add(e.finding);
       const cc = $('card-' + e.finding);
       if (cc) cc.className = 'card fixed';
       stripFixRow(e.finding,
@@ -472,6 +478,7 @@ function handle(e) {
       break; }
     case 'dismissed': {
       sawFixEvents = true;
+      dismissedIds.add(e.finding);
       log(`✗ ${e.finding} dismissed — ${e.rationale}`, 'kill');
       const cd = $('card-' + e.finding);
       if (cd) cd.className = 'card dismissed';
@@ -507,6 +514,7 @@ function resetView() {
   nLines = 0; tiles = {}; attackTotal = 0;
   nAtk = 0; nKill = 0; nSurv = 0; setMeters();
   decisions = {}; findingsShown = []; fixSubmitted = false; sawFixEvents = false;
+  fixedIds = new Set(); dismissedIds = new Set(); lastCost = 0;
   $('mTime').textContent = '0s'; $('mCost').textContent = '$0.00';
   $('lanes').innerHTML = ''; $('log').innerHTML = '';
   $('verdicts').innerHTML = '<div class="empty">No objections yet. Run the gauntlet.</div>';
