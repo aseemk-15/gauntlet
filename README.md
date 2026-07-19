@@ -35,7 +35,8 @@ python3 -m venv .venv && .venv/bin/pip install anthropic
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env   # never committed
 
 # the full demo arc, headless:
-./gauntlet-cli run assets/chart-eleanor-vance.md   # 30 attackers -> judge -> evidence cards
+./gauntlet-cli run assets/chart-eleanor-vance.md --agents 10  # 10x10 = 100 reviewers
+#   (omit --agents for the fast 30-reviewer default)
 ./gauntlet-cli fix runs/<run-dir> \                # clinician decisions -> orders + amendment
     --dismiss <finding-id>:"rationale"             #   (amendment SUPERSEDES the med list)
 ./gauntlet-cli reverify runs/<run-dir>             # targeted re-attack of the fixed lanes
@@ -51,13 +52,13 @@ echo "ANTHROPIC_API_KEY=sk-ant-..." > .env   # never committed
 
 # views of the same real event stream (CLI prints it too):
 .venv/bin/python ui/serve.py
-#   http://localhost:3010            the note under review: EMR-neutral discharge
-#                                    summary; run ceremony overlay; red-pen highlights
-#                                    with popover accept/dismiss; accepted orders
-#                                    insert as tracked changes; re-verify chip
-#   http://localhost:3010/md         physician sheet (single-column card view)
-#   http://localhost:3010/corridor   corridor mission log (field -> judge gate -> document)
-#   http://localhost:3010/classic    original mission log
+#   http://localhost:3010            mission log (the demo view): 10x10 attack grid,
+#                                    judge refutation log, evidence cards with
+#                                    PLACE ORDERS / DISMISS, re-run banner
+#   http://localhost:3010/emr        EMR-style chart: tabs, editable discharge plan,
+#                                    red-pen highlights, tracked-change order insertion
+#   http://localhost:3010/md         physician sheet (single-column accept/dismiss)
+#   http://localhost:3010/corridor   corridor view (field -> judge gate -> document)
 # every run also writes runs/<dir>/cds-cards.json — CDS Hooks cards, the payload an
 # EHR order-sign hook (e.g. Epic CDS Hooks) would render at discharge signing
 ```

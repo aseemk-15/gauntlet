@@ -15,8 +15,8 @@
                           │ ~28-30 raw objections
                           ▼
       ┌───────────────────────────────────────────┐
-      │ JUDGE    frontier model, temp 0, DEFAULT   │
-      │ KILL. Four tests:                          │
+      │ JUDGE    frontier model, REFUTES BY        │
+      │ DEFAULT. Four tests:                       │
       │  1 EVIDENCE     quotes verbatim in chart?  │
       │  2 ADDRESSED    covered incl. amendments?  │
       │  3 MATERIALITY  change an order TONIGHT?   │
@@ -62,7 +62,7 @@ carried as knowledge) shaped five design decisions:
 
 1. **All precision lives in the judge.** Attackers object ~28/30 regardless of
    instructions. A naive "be strict" judge passed 20/30 objections; the four-test rubric
-   with default-kill at temperature 0 gets to 3-4 genuine survivors. So: replicate
+   with refute-by-default gets to 3-4 genuine survivors. So: replicate
    attackers, single-run the judge.
 2. **Dedup is mandatory.** 13 raw survivors → 4 distinct findings in calibration; the
    cluster size is a free consensus badge ("found independently by N of 30"). Treated as
@@ -81,7 +81,8 @@ carried as knowledge) shaped five design decisions:
 
 ## Lanes
 
-Discharge mode (10 lanes × 3 attackers): drug-interactions, anticoagulation-monitoring,
+Discharge mode (10 lanes × 3 attackers by default; `--agents 10` runs the full 10×10
+demo swarm): drug-interactions, anticoagulation-monitoring,
 volume-status, renal-electrolytes, pending-results, follow-up-continuity,
 med-rec-contradictions, outside-records, care-coordination, infection-course.
 
