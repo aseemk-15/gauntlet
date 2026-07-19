@@ -152,7 +152,7 @@
 
   <div class="meter">
     <div class="m"><div class="k">Attacks</div><div class="v acc" id="mAtk">0</div></div>
-    <div class="m"><div class="k">Killed in review</div><div class="v" id="mKill">0</div></div>
+    <div class="m"><div class="k">Refuted in review</div><div class="v" id="mKill">0</div></div>
     <div class="m"><div class="k">Survivors</div><div class="v red" id="mSurv">0</div></div>
     <div class="m"><div class="k">Elapsed</div><div class="v" id="mTime">0s</div></div>
     <div class="m"><div class="k">Cost</div><div class="v" id="mCost">$0.00</div></div>
@@ -181,7 +181,7 @@
     </div>
 
     <div class="panel">
-      <p class="eyebrow">Surviving objections — receipts or death</p>
+      <p class="eyebrow">Surviving objections — receipts required</p>
       <div class="banner" id="banner">
         <div class="big">0 SURVIVING OBJECTIONS</div>
         <div class="sub" id="bannersub"></div>
@@ -189,7 +189,7 @@
       <div id="residual"></div>
       <div id="verdicts"><div class="empty">No objections yet. Run the gauntlet.</div></div>
       <div class="log">
-        <p class="eyebrow">Judge — kill log</p>
+        <p class="eyebrow">Judge — refutation log</p>
         <div class="loglines" id="log"></div>
       </div>
     </div>
@@ -240,21 +240,46 @@ function log(html, cls) {
   $('log').appendChild(d); $('log').scrollTop = $('log').scrollHeight;
 }
 
+// the full grid exists before the run (like the mock); events only activate cells
+const DISCHARGE_ORDER = ['drug-interactions', 'anticoagulation', 'volume-status',
+  'renal-electrolytes', 'pending-results', 'follow-up-continuity',
+  'med-rec-contradictions', 'outside-records', 'care-coordination', 'infection-course'];
+const AMBIENT_ORDER = ['said-not-documented', 'med-mismatch', 'follow-up-gaps',
+  'grounding', 'internal-contradiction', 'safety-unaddressed'];
+const SUMMARY_ORDER = ['med-accuracy', 'grounding', 'pending-followup',
+  'said-not-documented', 'internal-contradiction', 'safety-unaddressed'];
+
+function buildGrid(laneList, perLane) {
+  $('lanes').innerHTML = ''; tiles = {};
+  document.documentElement.style.setProperty('--per-lane', perLane);
+  for (const lane of laneList) {
+    const l = document.createElement('div');
+    l.className = 'lane'; l.dataset.lane = lane;
+    l.innerHTML = `<div class="lab">${LANE_LABELS[lane] || lane.replace(/-/g, ' ')}</div>` +
+      `<div class="cells">` +
+      Array.from({length: perLane}, () => '<div class="cell"></div>').join('') +
+      `</div>`;
+    $('lanes').appendChild(l);
+  }
+}
+
 function tile(agent, lane) {
   if (tiles[agent]) return tiles[agent];
   let row = document.querySelector(`[data-lane="${lane}"] .cells`);
-  if (!row) {
+  if (!row) {  // unknown lane (shouldn't happen) — create it whole
     const l = document.createElement('div');
     l.className = 'lane'; l.dataset.lane = lane;
     l.innerHTML = `<div class="lab">${LANE_LABELS[lane] || lane.replace(/-/g, ' ')}</div><div class="cells"></div>`;
     $('lanes').appendChild(l);
     row = l.querySelector('.cells');
   }
-  const t = document.createElement('div');
-  t.className = 'cell';
-  row.appendChild(t);
-  tiles[agent] = t;
-  return t;
+  const idx = (parseInt(agent.split('#')[1], 10) || 1) - 1;
+  while (row.children.length <= idx) {
+    const c = document.createElement('div'); c.className = 'cell';
+    row.appendChild(c);
+  }
+  tiles[agent] = row.children[idx];
+  return tiles[agent];
 }
 
 function setTile(agent, lane, cls, tip) {
@@ -385,11 +410,16 @@ function stripFixRow(id, html) {
 
 function handle(e) {
   switch (e.type) {
-    case 'attack_begin':
+    case 'attack_begin': {
       if (!attackTotal) attackTotal = e.agents;
-      $('lanes').innerHTML = ''; tiles = {};
-      document.documentElement.style.setProperty('--per-lane',
-        Math.round(e.agents / e.lanes));
+      const per = Math.round(e.agents / e.lanes);
+      const order = /summary/.test(runDir || '') ? SUMMARY_ORDER
+        : /ambient/.test(runDir || '') ? AMBIENT_ORDER : DISCHARGE_ORDER;
+      // full grid up instantly (mock behavior); events then activate cells.
+      // reverify hits a lane subset whose names arrive per-agent — lazy there.
+      if (e.lanes >= order.length) buildGrid(order, per);
+      else { $('lanes').innerHTML = ''; tiles = {};
+             document.documentElement.style.setProperty('--per-lane', per); }
       nAtk = 0; nKill = 0; nSurv = 0; setMeters();
       $('swarmhead').textContent =
         `Attack swarm — ${e.lanes} lanes × ${Math.round(e.agents / e.lanes)} agents`;
