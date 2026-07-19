@@ -1,10 +1,11 @@
 # The Gauntlet
 
-**Bring receipts or die.**
+**Bring receipts, or be refuted.**
 
-Before a patient is discharged, 30 adversarial agents each get one job: find the
-documented way this discharge plan fails this patient — with verbatim chart receipts —
-or die in review. A strict evidence judge kills ~90% of objections. The survivors render
+Before a patient is discharged, an adversarial swarm (10 lanes × up to 10 agents) each
+gets one job: find the documented way this discharge plan fails this patient — with
+verbatim chart receipts — or be refuted in review. A strict evidence judge rejects
+~90-95% of objections with reasons. The survivors render
 as evidence cards with chart-line receipts. The clinician fills the gaps. A targeted
 re-verification confirms the amended plan holds.
 
@@ -69,7 +70,7 @@ that shaped it.
 - **Attack:** 10 lanes × 3 attackers, concurrent, temp 1, the chart as a cached prompt
   prefix. Attackers object to nearly everything by design — precision is not their job.
 - **Judge:** frontier model, temp 0, four tests (verbatim evidence, already-addressed,
-  tonight-materiality, single-order actionability), default kill. Then one clustering
+  tonight-materiality, single-order actionability), refute by default. Then one clustering
   pass merges survivors into distinct findings; cluster size renders as a
   "found by N of 30" confidence badge.
 - **Fix loop:** survivor cards state gaps; the clinician decides; an agent emits a
