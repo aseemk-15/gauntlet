@@ -424,7 +424,7 @@ function handle(e) {
       $('swarmhead').textContent =
         `Attack swarm — ${e.lanes} lanes × ${Math.round(e.agents / e.lanes)} agents`;
       log(`[system] ${e.agents} attackers launched · shared chart prefix cached`, 'sys');
-      break;
+      break; }
     case 'reverify_begin':
       setBtn('rerunning');
       log(`[system] re-running ONLY the fixed findings' lanes against the amended plan`, 'sys');
